@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/**
+
+# Client files (React app)
+client/**
+
+# Build output
+dist/**
+
+# Config files
+vite.config.ts
+tsconfig.json
+tsconfig.node.json
+package.json
+package-lock.json
+.gitignore
+.claspignore
+
+# Git
+.git/**
+
+# Markdown
+*.md
+
+# Old project
+old-prj-delmail/**

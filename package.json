@@ -1,0 +1,10 @@
+{
+  "name": "gmail-filter-manager",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd client && npm run build",
+    "push": "clasp push",
+    "deploy": "npm run build && npm run push"
+  }
+}

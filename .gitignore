@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+server/index.html
+
+# Environment
+.env
+.env.local
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Clasp (after initial setup, uncomment if using version control for scriptId)
+# .clasp.json
+
+# Old project
+old-prj-delmail/
+
+# Personal data
+mailFilters.xml
