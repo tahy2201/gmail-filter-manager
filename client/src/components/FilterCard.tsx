@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { gasApi } from '../services/gas';
-import type { FilterEntry, EmailPreview } from '../types';
+import { useState } from 'react'
+import { gasApi } from '../services/gas'
+import type { EmailPreview, FilterEntry } from '../types'
 
 const styles = {
   card: {
@@ -75,42 +75,43 @@ const styles = {
   previewMeta: {
     color: '#5f6368',
   },
-};
+}
 
 interface Props {
-  filter: FilterEntry;
+  filter: FilterEntry
 }
 
 export function FilterCard({ filter }: Props) {
-  const [previews, setPreviews] = useState<EmailPreview[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [previews, setPreviews] = useState<EmailPreview[] | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const buildQuery = () => {
-    const parts: string[] = [];
-    if (filter.criteria.from) parts.push(`from:(${filter.criteria.from})`);
-    if (filter.criteria.to) parts.push(`to:(${filter.criteria.to})`);
-    if (filter.criteria.subject) parts.push(`subject:(${filter.criteria.subject})`);
-    if (filter.criteria.hasTheWord) parts.push(filter.criteria.hasTheWord);
+    const parts: string[] = []
+    if (filter.criteria.from) parts.push(`from:(${filter.criteria.from})`)
+    if (filter.criteria.to) parts.push(`to:(${filter.criteria.to})`)
+    if (filter.criteria.subject)
+      parts.push(`subject:(${filter.criteria.subject})`)
+    if (filter.criteria.hasTheWord) parts.push(filter.criteria.hasTheWord)
     if (filter.criteria.doesNotHaveTheWord) {
-      parts.push(`-{${filter.criteria.doesNotHaveTheWord}}`);
+      parts.push(`-{${filter.criteria.doesNotHaveTheWord}}`)
     }
-    return parts.join(' ');
-  };
+    return parts.join(' ')
+  }
 
   const handlePreview = async () => {
-    const query = buildQuery();
-    if (!query) return;
+    const query = buildQuery()
+    if (!query) return
 
-    setLoading(true);
+    setLoading(true)
     try {
-      const emails = await gasApi.searchEmails(query, 5);
-      setPreviews(emails);
+      const emails = await gasApi.searchEmails(query, 5)
+      setPreviews(emails)
     } catch {
-      setPreviews([]);
+      setPreviews([])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div style={styles.card}>
@@ -140,13 +141,17 @@ export function FilterCard({ filter }: Props) {
         {filter.criteria.hasTheWord && (
           <div style={styles.criteriaItem}>
             <span style={styles.criteriaKey}>Has:</span>
-            <span style={styles.criteriaValue}>{filter.criteria.hasTheWord}</span>
+            <span style={styles.criteriaValue}>
+              {filter.criteria.hasTheWord}
+            </span>
           </div>
         )}
         {filter.criteria.doesNotHaveTheWord && (
           <div style={styles.criteriaItem}>
             <span style={styles.criteriaKey}>Not:</span>
-            <span style={styles.criteriaValue}>{filter.criteria.doesNotHaveTheWord}</span>
+            <span style={styles.criteriaValue}>
+              {filter.criteria.doesNotHaveTheWord}
+            </span>
           </div>
         )}
       </div>
@@ -169,14 +174,21 @@ export function FilterCard({ filter }: Props) {
         )}
       </div>
 
-      <button style={styles.button} onClick={handlePreview} disabled={loading}>
+      <button
+        type="button"
+        style={styles.button}
+        onClick={handlePreview}
+        disabled={loading}
+      >
         {loading ? 'Loading...' : 'Preview Matches'}
       </button>
 
       {previews !== null && (
         <div style={styles.previewList}>
           {previews.length === 0 ? (
-            <div style={{ fontSize: '12px', color: '#5f6368' }}>No matches found</div>
+            <div style={{ fontSize: '12px', color: '#5f6368' }}>
+              No matches found
+            </div>
           ) : (
             previews.map((email) => (
               <div key={email.id} style={styles.previewItem}>
@@ -190,5 +202,5 @@ export function FilterCard({ filter }: Props) {
         </div>
       )}
     </div>
-  );
+  )
 }

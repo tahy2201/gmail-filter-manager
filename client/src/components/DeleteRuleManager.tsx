@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useDeleteRules } from '../hooks/useDeleteRules';
-import { useLabels } from '../hooks/useLabels';
-import type { DeleteRule } from '../types';
+import { useState } from 'react'
+import { useDeleteRules } from '../hooks/useDeleteRules'
+import { useLabels } from '../hooks/useLabels'
+import type { DeleteRule } from '../types'
 
 const styles = {
   container: {
@@ -95,58 +95,58 @@ const styles = {
     borderRadius: '4px',
     fontSize: '14px',
   },
-};
+}
 
 export function DeleteRuleManager() {
-  const { rules, loading, error, saveRules, executeRule } = useDeleteRules();
-  const { labels } = useLabels();
-  const [newLabel, setNewLabel] = useState('');
-  const [newDays, setNewDays] = useState(30);
-  const [message, setMessage] = useState<string | null>(null);
-  const [executing, setExecuting] = useState<string | null>(null);
+  const { rules, loading, error, saveRules, executeRule } = useDeleteRules()
+  const { labels } = useLabels()
+  const [newLabel, setNewLabel] = useState('')
+  const [newDays, setNewDays] = useState(30)
+  const [message, setMessage] = useState<string | null>(null)
+  const [executing, setExecuting] = useState<string | null>(null)
 
   const handleToggle = async (index: number) => {
-    const updated = [...rules];
-    updated[index] = { ...updated[index], enabled: !updated[index].enabled };
-    await saveRules(updated);
-  };
+    const updated = [...rules]
+    updated[index] = { ...updated[index], enabled: !updated[index].enabled }
+    await saveRules(updated)
+  }
 
   const handleDelete = async (index: number) => {
-    const updated = rules.filter((_, i) => i !== index);
-    await saveRules(updated);
-  };
+    const updated = rules.filter((_, i) => i !== index)
+    await saveRules(updated)
+  }
 
   const handleAdd = async () => {
-    if (!newLabel) return;
+    if (!newLabel) return
     const newRule: DeleteRule = {
       labelName: newLabel,
       delayDays: newDays,
       enabled: true,
-    };
-    await saveRules([...rules, newRule]);
-    setNewLabel('');
-    setNewDays(30);
-  };
+    }
+    await saveRules([...rules, newRule])
+    setNewLabel('')
+    setNewDays(30)
+  }
 
   const handleExecute = async (rule: DeleteRule) => {
-    setExecuting(rule.labelName);
-    setMessage(null);
-    const deleted = await executeRule(rule.labelName, rule.delayDays);
+    setExecuting(rule.labelName)
+    setMessage(null)
+    const deleted = await executeRule(rule.labelName, rule.delayDays)
     if (deleted >= 0) {
-      setMessage(`Deleted ${deleted} emails from "${rule.labelName}"`);
+      setMessage(`Deleted ${deleted} emails from "${rule.labelName}"`)
     }
-    setExecuting(null);
-  };
+    setExecuting(null)
+  }
 
   if (loading) {
-    return <div style={styles.loading}>Loading delete rules...</div>;
+    return <div style={styles.loading}>Loading delete rules...</div>
   }
 
   if (error) {
-    return <div style={styles.error}>{error}</div>;
+    return <div style={styles.error}>{error}</div>
   }
 
-  const userLabels = labels.filter((l) => l.type === 'user');
+  const userLabels = labels.filter((l) => l.type === 'user')
 
   return (
     <div style={styles.container}>
@@ -164,12 +164,14 @@ export function DeleteRuleManager() {
               <div style={styles.label}>{rule.labelName}</div>
               <div style={styles.days}>{rule.delayDays} days</div>
               <button
+                type="button"
                 style={styles.toggle(rule.enabled)}
                 onClick={() => handleToggle(index)}
               >
                 {rule.enabled ? 'Enabled' : 'Disabled'}
               </button>
               <button
+                type="button"
                 style={styles.button}
                 onClick={() => handleExecute(rule)}
                 disabled={!rule.enabled || executing === rule.labelName}
@@ -177,6 +179,7 @@ export function DeleteRuleManager() {
                 {executing === rule.labelName ? 'Running...' : 'Run Now'}
               </button>
               <button
+                type="button"
                 style={{ ...styles.button, ...styles.buttonDanger }}
                 onClick={() => handleDelete(index)}
               >
@@ -208,6 +211,7 @@ export function DeleteRuleManager() {
             placeholder="Days"
           />
           <button
+            type="button"
             style={styles.button}
             onClick={handleAdd}
             disabled={!newLabel}
@@ -217,5 +221,5 @@ export function DeleteRuleManager() {
         </div>
       </div>
     </div>
-  );
+  )
 }

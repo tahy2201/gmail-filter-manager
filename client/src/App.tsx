@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import { FilterList } from './components/FilterList';
-import { QueryTester } from './components/QueryTester';
-import { DeleteRuleManager } from './components/DeleteRuleManager';
+import { useState } from 'react'
+import { DeleteRuleManager } from './components/DeleteRuleManager'
+import { FilterList } from './components/FilterList'
+import { QueryTester } from './components/QueryTester'
 
-type Tab = 'filters' | 'query' | 'delete';
+type Tab = 'filters' | 'query' | 'delete'
 
 const styles = {
   container: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     maxWidth: '1200px',
     margin: '0 auto',
     padding: '20px',
@@ -27,22 +28,23 @@ const styles = {
     borderBottom: '1px solid #e0e0e0',
     paddingBottom: '8px',
   },
-  tab: (active: boolean) => ({
-    padding: '8px 16px',
-    border: 'none',
-    borderRadius: '4px 4px 0 0',
-    cursor: 'pointer',
-    backgroundColor: active ? '#1a73e8' : '#f1f3f4',
-    color: active ? '#fff' : '#5f6368',
-    fontWeight: active ? 'bold' : 'normal',
-  } as React.CSSProperties),
+  tab: (active: boolean) =>
+    ({
+      padding: '8px 16px',
+      border: 'none',
+      borderRadius: '4px 4px 0 0',
+      cursor: 'pointer',
+      backgroundColor: active ? '#1a73e8' : '#f1f3f4',
+      color: active ? '#fff' : '#5f6368',
+      fontWeight: active ? 'bold' : 'normal',
+    }) as React.CSSProperties,
   content: {
     padding: '20px 0',
   },
-};
+}
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('filters');
+  const [activeTab, setActiveTab] = useState<Tab>('filters')
 
   return (
     <div style={styles.container}>
@@ -50,18 +52,21 @@ function App() {
         <h1 style={styles.title}>Gmail Filter Manager</h1>
         <nav style={styles.tabs}>
           <button
+            type="button"
             style={styles.tab(activeTab === 'filters')}
             onClick={() => setActiveTab('filters')}
           >
             Filters
           </button>
           <button
+            type="button"
             style={styles.tab(activeTab === 'query')}
             onClick={() => setActiveTab('query')}
           >
             Query Tester
           </button>
           <button
+            type="button"
             style={styles.tab(activeTab === 'delete')}
             onClick={() => setActiveTab('delete')}
           >
@@ -75,7 +80,7 @@ function App() {
         {activeTab === 'delete' && <DeleteRuleManager />}
       </main>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

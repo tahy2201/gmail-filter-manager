@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  client:
+    name: Client (Biome)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - uses: reviewdog/action-setup@v1
+      - name: TypeScript check
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx tsc --noEmit 2>&1 | reviewdog -efm="%f(%l,%c): %trror TS%n: %m" -name="tsc" -reporter=github-pr-review -filter-mode=nofilter -fail-on-error=false
+      - name: Biome lint
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm run lint 2>&1 | reviewdog -efm="%f:%l:%c %m" -name="biome" -reporter=github-pr-review -filter-mode=nofilter -fail-on-error=false
+      - name: Build check
+        run: npm run build
+
+  server:
+    name: Server (ESLint/Prettier)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: ./server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - uses: reviewdog/action-setup@v1
+      - name: ESLint
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm run lint 2>&1 | reviewdog -efm="%f:%l:%c: %m" -name="eslint" -reporter=github-pr-review -filter-mode=nofilter -fail-on-error=false
+      - name: Prettier check
+        run: npm run format:check

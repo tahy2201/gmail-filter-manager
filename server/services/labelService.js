@@ -8,20 +8,22 @@
  * @returns {Array} ラベル一覧
  */
 function listGmailLabels() {
-  const response = Gmail.Users.Labels.list('me');
-  const labels = response.labels || [];
+  const response = Gmail.Users.Labels.list('me')
+  const labels = response.labels || []
 
-  return labels.map(label => ({
-    id: label.id,
-    name: label.name,
-    type: label.type === 'system' ? 'system' : 'user'
-  })).sort((a, b) => {
-    // ユーザーラベルを先に、その後システムラベル
-    if (a.type !== b.type) {
-      return a.type === 'user' ? -1 : 1;
-    }
-    return a.name.localeCompare(b.name);
-  });
+  return labels
+    .map((label) => ({
+      id: label.id,
+      name: label.name,
+      type: label.type === 'system' ? 'system' : 'user'
+    }))
+    .sort((a, b) => {
+      // ユーザーラベルを先に、その後システムラベル
+      if (a.type !== b.type) {
+        return a.type === 'user' ? -1 : 1
+      }
+      return a.name.localeCompare(b.name)
+    })
 }
 
 /**
@@ -31,14 +33,14 @@ function listGmailLabels() {
  */
 function getLabelById(labelId) {
   try {
-    const label = Gmail.Users.Labels.get('me', labelId);
+    const label = Gmail.Users.Labels.get('me', labelId)
     return {
       id: label.id,
       name: label.name,
       type: label.type === 'system' ? 'system' : 'user'
-    };
+    }
   } catch (e) {
-    return null;
+    return null
   }
 }
 
@@ -48,8 +50,8 @@ function getLabelById(labelId) {
  * @returns {Object|null} ラベル
  */
 function getLabelByName(labelName) {
-  const labels = listGmailLabels();
-  return labels.find(l => l.name === labelName) || null;
+  const labels = listGmailLabels()
+  return labels.find((l) => l.name === labelName) || null
 }
 
 /**
@@ -58,17 +60,20 @@ function getLabelByName(labelName) {
  * @returns {Object} 作成されたラベル
  */
 function createLabel(labelName) {
-  const label = Gmail.Users.Labels.create({
-    name: labelName,
-    labelListVisibility: 'labelShow',
-    messageListVisibility: 'show'
-  }, 'me');
+  const label = Gmail.Users.Labels.create(
+    {
+      name: labelName,
+      labelListVisibility: 'labelShow',
+      messageListVisibility: 'show'
+    },
+    'me'
+  )
 
   return {
     id: label.id,
     name: label.name,
     type: 'user'
-  };
+  }
 }
 
 /**
@@ -78,10 +83,10 @@ function createLabel(labelName) {
  */
 function deleteLabel(labelId) {
   try {
-    Gmail.Users.Labels.remove('me', labelId);
-    return true;
+    Gmail.Users.Labels.remove('me', labelId)
+    return true
   } catch (e) {
-    console.error('Error deleting label:', e);
-    return false;
+    console.error('Error deleting label:', e)
+    return false
   }
 }

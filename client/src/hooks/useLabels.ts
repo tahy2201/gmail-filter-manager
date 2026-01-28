@@ -1,28 +1,28 @@
-import { useState, useEffect, useCallback } from 'react';
-import { gasApi } from '../services/gas';
-import type { Label } from '../types';
+import { useCallback, useEffect, useState } from 'react'
+import { gasApi } from '../services/gas'
+import type { Label } from '../types'
 
 export function useLabels() {
-  const [labels, setLabels] = useState<Label[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [labels, setLabels] = useState<Label[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchLabels = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      const data = await gasApi.getLabels();
-      setLabels(data);
+      const data = await gasApi.getLabels()
+      setLabels(data)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to fetch labels');
+      setError(e instanceof Error ? e.message : 'Failed to fetch labels')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    fetchLabels();
-  }, [fetchLabels]);
+    fetchLabels()
+  }, [fetchLabels])
 
-  return { labels, loading, error, refetch: fetchLabels };
+  return { labels, loading, error, refetch: fetchLabels }
 }
