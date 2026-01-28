@@ -3,37 +3,37 @@
  * スプレッドシートへのアクセスを管理
  */
 
-const SPREADSHEET_ID_KEY = 'SPREADSHEET_ID';
-const FILTERS_SHEET_NAME = 'Filters';
-const DELETE_RULES_SHEET_NAME = 'DeleteRules';
-const HISTORY_SHEET_NAME = 'History';
+const SPREADSHEET_ID_KEY = 'SPREADSHEET_ID'
+const FILTERS_SHEET_NAME = 'Filters'
+const DELETE_RULES_SHEET_NAME = 'DeleteRules'
+const HISTORY_SHEET_NAME = 'History'
 
 /**
  * スプレッドシートを取得（なければ作成）
  * @returns {Spreadsheet} スプレッドシート
  */
 function getOrCreateSpreadsheet() {
-  const props = PropertiesService.getScriptProperties();
-  let spreadsheetId = props.getProperty(SPREADSHEET_ID_KEY);
+  const props = PropertiesService.getScriptProperties()
+  let spreadsheetId = props.getProperty(SPREADSHEET_ID_KEY)
 
   if (spreadsheetId) {
     try {
-      return SpreadsheetApp.openById(spreadsheetId);
+      return SpreadsheetApp.openById(spreadsheetId)
     } catch (e) {
-      console.log('Spreadsheet not found, creating new one');
+      console.log('Spreadsheet not found, creating new one')
     }
   }
 
   // 新規作成
-  const ss = SpreadsheetApp.create('Gmail Filter Manager Data');
-  spreadsheetId = ss.getId();
-  props.setProperty(SPREADSHEET_ID_KEY, spreadsheetId);
+  const ss = SpreadsheetApp.create('Gmail Filter Manager Data')
+  spreadsheetId = ss.getId()
+  props.setProperty(SPREADSHEET_ID_KEY, spreadsheetId)
 
   // シートを初期化
-  initializeSheets(ss);
+  initializeSheets(ss)
 
-  console.log('Created new spreadsheet: ' + spreadsheetId);
-  return ss;
+  console.log('Created new spreadsheet: ' + spreadsheetId)
+  return ss
 }
 
 /**
@@ -42,32 +42,44 @@ function getOrCreateSpreadsheet() {
  */
 function initializeSheets(ss) {
   // Filters シート
-  let filtersSheet = ss.getSheetByName(FILTERS_SHEET_NAME);
+  let filtersSheet = ss.getSheetByName(FILTERS_SHEET_NAME)
   if (!filtersSheet) {
-    filtersSheet = ss.getSheets()[0];
-    filtersSheet.setName(FILTERS_SHEET_NAME);
+    filtersSheet = ss.getSheets()[0]
+    filtersSheet.setName(FILTERS_SHEET_NAME)
   }
-  filtersSheet.getRange('A1:J1').setValues([[
-    'id', 'from', 'to', 'subject', 'hasTheWord', 'doesNotHaveTheWord',
-    'label', 'shouldArchive', 'shouldMarkAsRead', 'shouldNeverSpam'
-  ]]);
-  filtersSheet.getRange('A1:J1').setFontWeight('bold');
+  filtersSheet
+    .getRange('A1:J1')
+    .setValues([
+      [
+        'id',
+        'from',
+        'to',
+        'subject',
+        'hasTheWord',
+        'doesNotHaveTheWord',
+        'label',
+        'shouldArchive',
+        'shouldMarkAsRead',
+        'shouldNeverSpam'
+      ]
+    ])
+  filtersSheet.getRange('A1:J1').setFontWeight('bold')
 
   // DeleteRules シート
-  let deleteSheet = ss.getSheetByName(DELETE_RULES_SHEET_NAME);
+  let deleteSheet = ss.getSheetByName(DELETE_RULES_SHEET_NAME)
   if (!deleteSheet) {
-    deleteSheet = ss.insertSheet(DELETE_RULES_SHEET_NAME);
+    deleteSheet = ss.insertSheet(DELETE_RULES_SHEET_NAME)
   }
-  deleteSheet.getRange('A1:C1').setValues([['labelName', 'delayDays', 'enabled']]);
-  deleteSheet.getRange('A1:C1').setFontWeight('bold');
+  deleteSheet.getRange('A1:C1').setValues([['labelName', 'delayDays', 'enabled']])
+  deleteSheet.getRange('A1:C1').setFontWeight('bold')
 
   // History シート
-  let historySheet = ss.getSheetByName(HISTORY_SHEET_NAME);
+  let historySheet = ss.getSheetByName(HISTORY_SHEET_NAME)
   if (!historySheet) {
-    historySheet = ss.insertSheet(HISTORY_SHEET_NAME);
+    historySheet = ss.insertSheet(HISTORY_SHEET_NAME)
   }
-  historySheet.getRange('A1:D1').setValues([['timestamp', 'action', 'target', 'details']]);
-  historySheet.getRange('A1:D1').setFontWeight('bold');
+  historySheet.getRange('A1:D1').setValues([['timestamp', 'action', 'target', 'details']])
+  historySheet.getRange('A1:D1').setFontWeight('bold')
 }
 
 /**
@@ -76,15 +88,15 @@ function initializeSheets(ss) {
  * @returns {Sheet} シート
  */
 function getSheet(sheetName) {
-  const ss = getOrCreateSpreadsheet();
-  let sheet = ss.getSheetByName(sheetName);
+  const ss = getOrCreateSpreadsheet()
+  let sheet = ss.getSheetByName(sheetName)
 
   if (!sheet) {
-    initializeSheets(ss);
-    sheet = ss.getSheetByName(sheetName);
+    initializeSheets(ss)
+    sheet = ss.getSheetByName(sheetName)
   }
 
-  return sheet;
+  return sheet
 }
 
 /**
@@ -94,9 +106,9 @@ function getSheet(sheetName) {
  * @param {string} details - 詳細
  */
 function addHistory(action, target, details) {
-  const sheet = getSheet(HISTORY_SHEET_NAME);
-  const timestamp = new Date().toISOString();
-  sheet.appendRow([timestamp, action, target, details]);
+  const sheet = getSheet(HISTORY_SHEET_NAME)
+  const timestamp = new Date().toISOString()
+  sheet.appendRow([timestamp, action, target, details])
 }
 
 /**
@@ -104,8 +116,8 @@ function addHistory(action, target, details) {
  * @returns {string} URL
  */
 function getSpreadsheetUrl() {
-  const ss = getOrCreateSpreadsheet();
-  return ss.getUrl();
+  const ss = getOrCreateSpreadsheet()
+  return ss.getUrl()
 }
 
 /**
@@ -113,10 +125,10 @@ function getSpreadsheetUrl() {
  * @param {string} spreadsheetId - スプレッドシートID
  */
 function setSpreadsheetId(spreadsheetId) {
-  const props = PropertiesService.getScriptProperties();
-  props.setProperty(SPREADSHEET_ID_KEY, spreadsheetId);
+  const props = PropertiesService.getScriptProperties()
+  props.setProperty(SPREADSHEET_ID_KEY, spreadsheetId)
 
   // シートを初期化
-  const ss = SpreadsheetApp.openById(spreadsheetId);
-  initializeSheets(ss);
+  const ss = SpreadsheetApp.openById(spreadsheetId)
+  initializeSheets(ss)
 }

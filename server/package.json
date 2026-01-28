@@ -1,0 +1,16 @@
+{
+  "name": "gmail-filter-manager-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "eslint-plugin-googleappsscript": "^1.0.5",
+    "prettier": "^3.0.0"
+  }
+}

@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { gasApi } from '../services/gas';
-import type { EmailPreview } from '../types';
+import { useState } from 'react'
+import { gasApi } from '../services/gas'
+import type { EmailPreview } from '../types'
 
 const styles = {
   container: {
@@ -91,43 +91,47 @@ const styles = {
     color: '#1a73e8',
     marginBottom: '12px',
   },
-};
+}
 
 export function QueryTester() {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<EmailPreview[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [unfilteredEmails, setUnfilteredEmails] = useState<EmailPreview[] | null>(null);
-  const [loadingUnfiltered, setLoadingUnfiltered] = useState(false);
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<EmailPreview[] | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [unfilteredEmails, setUnfilteredEmails] = useState<
+    EmailPreview[] | null
+  >(null)
+  const [loadingUnfiltered, setLoadingUnfiltered] = useState(false)
 
   const handleSearch = async () => {
-    if (!query.trim()) return;
-    setLoading(true);
-    setError(null);
+    if (!query.trim()) return
+    setLoading(true)
+    setError(null)
     try {
-      const emails = await gasApi.searchEmails(query, 50);
-      setResults(emails);
+      const emails = await gasApi.searchEmails(query, 50)
+      setResults(emails)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Search failed');
-      setResults(null);
+      setError(e instanceof Error ? e.message : 'Search failed')
+      setResults(null)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleGetUnfiltered = async () => {
-    setLoadingUnfiltered(true);
-    setError(null);
+    setLoadingUnfiltered(true)
+    setError(null)
     try {
-      const emails = await gasApi.getUnfilteredEmails(50);
-      setUnfilteredEmails(emails);
+      const emails = await gasApi.getUnfilteredEmails(50)
+      setUnfilteredEmails(emails)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to get unfiltered emails');
+      setError(
+        e instanceof Error ? e.message : 'Failed to get unfiltered emails',
+      )
     } finally {
-      setLoadingUnfiltered(false);
+      setLoadingUnfiltered(false)
     }
-  };
+  }
 
   return (
     <div style={styles.container}>
@@ -141,6 +145,7 @@ export function QueryTester() {
           style={styles.input}
         />
         <button
+          type="button"
           onClick={handleSearch}
           disabled={loading || !query.trim()}
           style={{
@@ -156,15 +161,15 @@ export function QueryTester() {
 
       {results !== null && (
         <div style={styles.results}>
-          <div style={styles.resultHeader}>
-            {results.length} results found
-          </div>
+          <div style={styles.resultHeader}>{results.length} results found</div>
           {results.length === 0 ? (
             <div style={styles.empty}>No emails match this query</div>
           ) : (
             results.map((email) => (
               <div key={email.id} style={styles.emailItem}>
-                <div style={styles.emailSubject}>{email.subject || '(No Subject)'}</div>
+                <div style={styles.emailSubject}>
+                  {email.subject || '(No Subject)'}
+                </div>
                 <div style={styles.emailMeta}>
                   {email.from} - {email.date}
                 </div>
@@ -178,6 +183,7 @@ export function QueryTester() {
       <div style={styles.unfilteredSection}>
         <div style={styles.sectionTitle}>Unfiltered Emails</div>
         <button
+          type="button"
           onClick={handleGetUnfiltered}
           disabled={loadingUnfiltered}
           style={{
@@ -195,11 +201,15 @@ export function QueryTester() {
               {unfilteredEmails.length} unfiltered emails
             </div>
             {unfilteredEmails.length === 0 ? (
-              <div style={styles.empty}>All recent emails match at least one filter</div>
+              <div style={styles.empty}>
+                All recent emails match at least one filter
+              </div>
             ) : (
               unfilteredEmails.map((email) => (
                 <div key={email.id} style={styles.emailItem}>
-                  <div style={styles.emailSubject}>{email.subject || '(No Subject)'}</div>
+                  <div style={styles.emailSubject}>
+                    {email.subject || '(No Subject)'}
+                  </div>
                   <div style={styles.emailMeta}>
                     {email.from} - {email.date}
                   </div>
@@ -211,5 +221,5 @@ export function QueryTester() {
         )}
       </div>
     </div>
-  );
+  )
 }

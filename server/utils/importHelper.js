@@ -13,30 +13,30 @@
  * 3. この関数を実行
  */
 function importMyFilters() {
-  const xml = `<!-- ここにGmailからエクスポートしたXMLを貼り付けてください -->`;
+  const xml = `<!-- ここにGmailからエクスポートしたXMLを貼り付けてください -->`
 
   if (xml.includes('ここにGmail')) {
-    throw new Error('XMLを貼り付けてから実行してください');
+    throw new Error('XMLを貼り付けてから実行してください')
   }
 
-  const result = importFiltersFromXml(xml);
-  console.log('Import result:', JSON.stringify(result));
-  return result;
+  const result = importFiltersFromXml(xml)
+  console.log('Import result:', JSON.stringify(result))
+  return result
 }
 
 /**
  * スプレッドシートの内容を確認
  */
 function checkSpreadsheetData() {
-  const filters = getFiltersFromSpreadsheet();
-  console.log('Filters count:', filters.length);
-  console.log('First 3 filters:', JSON.stringify(filters.slice(0, 3), null, 2));
+  const filters = getFiltersFromSpreadsheet()
+  console.log('Filters count:', filters.length)
+  console.log('First 3 filters:', JSON.stringify(filters.slice(0, 3), null, 2))
 
-  const deleteRules = getDeleteRulesFromStorage();
-  console.log('Delete rules count:', deleteRules.length);
+  const deleteRules = getDeleteRulesFromStorage()
+  console.log('Delete rules count:', deleteRules.length)
 
   return {
     filtersCount: filters.length,
     deleteRulesCount: deleteRules.length
-  };
+  }
 }
