@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useFilters } from '../hooks/useFilters'
+import { useLabels } from '../hooks/useLabels'
 import type { FilterEntry } from '../types'
+import { ConfirmDialog } from './ConfirmDialog'
 import { FilterCard } from './FilterCard'
+import { FilterEditForm } from './FilterEditForm'
+import { Modal } from './Modal'
 
 const styles = {
   container: {
@@ -58,6 +62,16 @@ const styles = {
     gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
     gap: '12px',
   },
+  createButton: {
+    padding: '8px 16px',
+    fontSize: '14px',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    backgroundColor: '#1a73e8',
+    color: '#fff',
+    fontWeight: 'bold' as const,
+  },
 }
 
 function groupByLabel(filters: FilterEntry[]): Map<string, FilterEntry[]> {
@@ -77,11 +91,17 @@ function groupByLabel(filters: FilterEntry[]): Map<string, FilterEntry[]> {
 }
 
 export function FilterList() {
-  const { filters, loading, error } = useFilters()
+  const { filters, loading, error, addFilter, updateFilter, deleteFilter } =
+    useFilters()
+  const { labels } = useLabels()
   const [search, setSearch] = useState('')
   const [labelFilter, setLabelFilter] = useState('')
+  const [editingFilter, setEditingFilter] = useState<FilterEntry | null>(null)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [deletingFilterId, setDeletingFilterId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
-  const labels = useMemo(() => {
+  const labelOptions = useMemo(() => {
     const set = new Set<string>()
     for (const f of filters) {
       if (f.action.label) {
@@ -114,6 +134,38 @@ export function FilterList() {
     [filteredFilters],
   )
 
+  const deletingFilter = deletingFilterId
+    ? filters.find((f) => f.id === deletingFilterId)
+    : null
+
+  const handleCreate = async (filterData: Omit<FilterEntry, 'id'>) => {
+    setSaving(true)
+    const success = await addFilter(filterData)
+    setSaving(false)
+    if (success) {
+      setIsCreateModalOpen(false)
+    }
+  }
+
+  const handleUpdate = async (filterData: FilterEntry) => {
+    setSaving(true)
+    const success = await updateFilter(filterData.id, filterData)
+    setSaving(false)
+    if (success) {
+      setEditingFilter(null)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deletingFilterId) return
+    setSaving(true)
+    const success = await deleteFilter(deletingFilterId)
+    setSaving(false)
+    if (success) {
+      setDeletingFilterId(null)
+    }
+  }
+
   if (loading) {
     return <div style={styles.loading}>フィルタを読み込み中...</div>
   }
@@ -125,6 +177,13 @@ export function FilterList() {
   return (
     <div style={styles.container}>
       <div style={styles.toolbar}>
+        <button
+          type="button"
+          style={styles.createButton}
+          onClick={() => setIsCreateModalOpen(true)}
+        >
+          + 新規作成
+        </button>
         <input
           type="text"
           placeholder="フィルタを検索..."
@@ -138,7 +197,7 @@ export function FilterList() {
           style={styles.select}
         >
           <option value="">すべてのラベル</option>
-          {labels.map((l) => (
+          {labelOptions.map((l) => (
             <option key={l} value={l}>
               {l}
             </option>
@@ -154,11 +213,60 @@ export function FilterList() {
           <h3 style={styles.groupHeader}>{label}</h3>
           <div style={styles.filterGrid}>
             {groupFilters.map((filter) => (
-              <FilterCard key={filter.id} filter={filter} />
+              <FilterCard
+                key={filter.id}
+                filter={filter}
+                onEdit={setEditingFilter}
+                onDelete={setDeletingFilterId}
+              />
             ))}
           </div>
         </div>
       ))}
+
+      {/* 新規作成モーダル */}
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="フィルタを作成"
+      >
+        <FilterEditForm
+          labels={labels}
+          onSave={handleCreate}
+          onCancel={() => setIsCreateModalOpen(false)}
+          loading={saving}
+        />
+      </Modal>
+
+      {/* 編集モーダル */}
+      <Modal
+        isOpen={!!editingFilter}
+        onClose={() => setEditingFilter(null)}
+        title="フィルタを編集"
+      >
+        {editingFilter && (
+          <FilterEditForm
+            filter={editingFilter}
+            labels={labels}
+            onSave={(data) => handleUpdate(data as FilterEntry)}
+            onCancel={() => setEditingFilter(null)}
+            loading={saving}
+          />
+        )}
+      </Modal>
+
+      {/* 削除確認ダイアログ */}
+      <ConfirmDialog
+        isOpen={!!deletingFilterId}
+        title="フィルタを削除"
+        message={
+          deletingFilter
+            ? `「${deletingFilter.action.label || deletingFilter.criteria.from || '条件'}」のフィルタを削除しますか？この操作は取り消せません。`
+            : ''
+        }
+        onConfirm={handleDelete}
+        onCancel={() => setDeletingFilterId(null)}
+      />
     </div>
   )
 }

@@ -58,6 +58,31 @@ const styles = {
     backgroundColor: '#f1f3f4',
     color: '#5f6368',
   },
+  actionButtons: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: '12px',
+    paddingTop: '12px',
+    borderTop: '1px solid #e0e0e0',
+  },
+  editButton: {
+    padding: '6px 12px',
+    fontSize: '12px',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    backgroundColor: '#1a73e8',
+    color: '#fff',
+  },
+  deleteButton: {
+    padding: '6px 12px',
+    fontSize: '12px',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    backgroundColor: '#ea4335',
+    color: '#fff',
+  },
   previewList: {
     marginTop: '12px',
     borderTop: '1px solid #e0e0e0',
@@ -79,9 +104,11 @@ const styles = {
 
 interface Props {
   filter: FilterEntry
+  onEdit?: (filter: FilterEntry) => void
+  onDelete?: (filterId: string) => void
 }
 
-export function FilterCard({ filter }: Props) {
+export function FilterCard({ filter, onEdit, onDelete }: Props) {
   const [previews, setPreviews] = useState<EmailPreview[] | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -198,6 +225,29 @@ export function FilterCard({ filter }: Props) {
                 </div>
               </div>
             ))
+          )}
+        </div>
+      )}
+
+      {(onEdit || onDelete) && (
+        <div style={styles.actionButtons}>
+          {onEdit && (
+            <button
+              type="button"
+              style={styles.editButton}
+              onClick={() => onEdit(filter)}
+            >
+              編集
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              style={styles.deleteButton}
+              onClick={() => onDelete(filter.id)}
+            >
+              削除
+            </button>
           )}
         </div>
       )}
