@@ -56,9 +56,9 @@ gmail-filter-manager/
 - ✅ XMLインポート（GASエディタから `importMyFilters()` 実行）
 - ✅ スプレッドシートへのデータ保存
 - ✅ Gmail差分同期（Sync to Gmailタブで差分プレビュー・適用）
+- ✅ フィルタ編集UI（WebUIからフィルタを追加・編集・削除）
 
 ## 未実装機能
-- ❌ フィルタ編集UI（WebUIからフィルタを追加・編集・削除）
 - ❌ 日次トリガー設定UI（`setupDailyDeleteTrigger()` 関数はあるがUI未連携）
 
 ## 開発コマンド
@@ -76,6 +76,12 @@ cd client && npm run dev    # Vite dev server（GAS APIは動作しない）
 - `gmail.settings.basic` - フィルタ設定
 - `gmail.labels` - ラベル取得
 - `spreadsheets` - データ保存
+
+## Gitワークフロー
+- **mainブランチへの直接push禁止**: 必ずfeatureブランチを作成してPRを経由すること
+- ブランチ命名: `feature/機能名` または `fix/修正内容`
+- コミット後は `git push -u origin HEAD` でfeatureブランチをpush
+- PRを作成してからmainにマージ
 
 ## 注意事項
 - `mailFilters.xml` と `old-prj-delmail/` は `.gitignore` で除外
