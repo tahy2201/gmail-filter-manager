@@ -2,7 +2,14 @@
  * GAS API クライアント
  */
 
-import type { DeleteRule, EmailPreview, FilterEntry, Label } from '../types'
+import type {
+  DeleteRule,
+  EmailPreview,
+  FilterDiffPreview,
+  FilterDiffResult,
+  FilterEntry,
+  Label,
+} from '../types'
 
 // GAS の google.script.run の型定義
 declare const google: {
@@ -30,6 +37,8 @@ interface GasRunner {
   getUnfilteredEmails: (max: number) => void
   getDataSpreadsheetUrl: () => void
   setup: () => void
+  previewFilterDiff: () => void
+  applyFilterDiff: (dryRun: boolean) => void
 }
 
 /**
@@ -109,4 +118,12 @@ export const gasApi = {
   /** 初期セットアップ */
   setup: (): Promise<{ spreadsheetUrl: string; spreadsheetId: string }> =>
     runGasFunction('setup'),
+
+  /** フィルタ差分プレビューを取得 */
+  previewFilterDiff: (): Promise<FilterDiffPreview> =>
+    runGasFunction('previewFilterDiff'),
+
+  /** フィルタ差分を適用 */
+  applyFilterDiff: (dryRun = false): Promise<FilterDiffResult> =>
+    runGasFunction('applyFilterDiff', dryRun),
 }

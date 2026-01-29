@@ -54,3 +54,39 @@ export interface ApiResponse<T> {
   data?: T
   error?: string
 }
+
+/** フィルタ差分プレビュー項目 */
+export interface FilterDiffItem {
+  gmailId?: string
+  from?: string
+  to?: string
+  subject?: string
+  hasTheWord?: string
+  label?: string
+}
+
+/** フィルタ差分プレビュー */
+export interface FilterDiffPreview {
+  toCreate: FilterDiffItem[]
+  toDelete: FilterDiffItem[]
+  toKeepCount: number
+  summary: {
+    create: number
+    delete: number
+    keep: number
+  }
+}
+
+/** フィルタ差分適用結果 */
+export interface FilterDiffResult {
+  created: number
+  deleted: number
+  errors: Array<{
+    action: 'create' | 'delete'
+    filter: FilterDiffItem
+    error: string
+  }>
+  dryRun?: boolean
+  wouldCreate?: number
+  wouldDelete?: number
+}
