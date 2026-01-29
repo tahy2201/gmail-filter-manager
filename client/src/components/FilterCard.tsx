@@ -122,25 +122,25 @@ export function FilterCard({ filter }: Props) {
       <div style={styles.criteriaSection}>
         {filter.criteria.from && (
           <div style={styles.criteriaItem}>
-            <span style={styles.criteriaKey}>From:</span>
+            <span style={styles.criteriaKey}>差出人:</span>
             <span style={styles.criteriaValue}>{filter.criteria.from}</span>
           </div>
         )}
         {filter.criteria.to && (
           <div style={styles.criteriaItem}>
-            <span style={styles.criteriaKey}>To:</span>
+            <span style={styles.criteriaKey}>宛先:</span>
             <span style={styles.criteriaValue}>{filter.criteria.to}</span>
           </div>
         )}
         {filter.criteria.subject && (
           <div style={styles.criteriaItem}>
-            <span style={styles.criteriaKey}>Subject:</span>
+            <span style={styles.criteriaKey}>件名:</span>
             <span style={styles.criteriaValue}>{filter.criteria.subject}</span>
           </div>
         )}
         {filter.criteria.hasTheWord && (
           <div style={styles.criteriaItem}>
-            <span style={styles.criteriaKey}>Has:</span>
+            <span style={styles.criteriaKey}>含む:</span>
             <span style={styles.criteriaValue}>
               {filter.criteria.hasTheWord}
             </span>
@@ -148,7 +148,7 @@ export function FilterCard({ filter }: Props) {
         )}
         {filter.criteria.doesNotHaveTheWord && (
           <div style={styles.criteriaItem}>
-            <span style={styles.criteriaKey}>Not:</span>
+            <span style={styles.criteriaKey}>含まない:</span>
             <span style={styles.criteriaValue}>
               {filter.criteria.doesNotHaveTheWord}
             </span>
@@ -158,19 +158,19 @@ export function FilterCard({ filter }: Props) {
 
       <div style={styles.actions}>
         {filter.action.shouldArchive && (
-          <span style={styles.badge('#34a853')}>Archive</span>
+          <span style={styles.badge('#34a853')}>アーカイブ</span>
         )}
         {filter.action.shouldMarkAsRead && (
-          <span style={styles.badge('#fbbc04')}>Mark Read</span>
+          <span style={styles.badge('#fbbc04')}>既読にする</span>
         )}
         {filter.action.shouldNeverSpam && (
-          <span style={styles.badge('#4285f4')}>Never Spam</span>
+          <span style={styles.badge('#4285f4')}>迷惑メールにしない</span>
         )}
         {filter.action.shouldNeverMarkAsImportant && (
-          <span style={styles.badge('#9e9e9e')}>Not Important</span>
+          <span style={styles.badge('#9e9e9e')}>重要にしない</span>
         )}
         {filter.action.forwardTo && (
-          <span style={styles.badge('#ea4335')}>Forward</span>
+          <span style={styles.badge('#ea4335')}>転送</span>
         )}
       </div>
 
@@ -180,14 +180,14 @@ export function FilterCard({ filter }: Props) {
         onClick={handlePreview}
         disabled={loading}
       >
-        {loading ? 'Loading...' : 'Preview Matches'}
+        {loading ? '読み込み中...' : '一致メールを表示'}
       </button>
 
       {previews !== null && (
         <div style={styles.previewList}>
           {previews.length === 0 ? (
             <div style={{ fontSize: '12px', color: '#5f6368' }}>
-              No matches found
+              一致するメールがありません
             </div>
           ) : (
             previews.map((email) => (

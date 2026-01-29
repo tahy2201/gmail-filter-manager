@@ -111,7 +111,7 @@ export function QueryTester() {
       const emails = await gasApi.searchEmails(query, 50)
       setResults(emails)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Search failed')
+      setError(e instanceof Error ? e.message : '検索に失敗しました')
       setResults(null)
     } finally {
       setLoading(false)
@@ -126,7 +126,7 @@ export function QueryTester() {
       setUnfilteredEmails(emails)
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : 'Failed to get unfiltered emails',
+        e instanceof Error ? e.message : 'フィルタ外メールの取得に失敗しました',
       )
     } finally {
       setLoadingUnfiltered(false)
@@ -138,7 +138,7 @@ export function QueryTester() {
       <div style={styles.inputGroup}>
         <input
           type="text"
-          placeholder="Enter Gmail search query (e.g., from:example.com subject:invoice)"
+          placeholder="Gmailの検索クエリを入力（例: from:example.com subject:請求書）"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -153,7 +153,7 @@ export function QueryTester() {
             ...(loading || !query.trim() ? styles.buttonDisabled : {}),
           }}
         >
-          {loading ? 'Searching...' : 'Search'}
+          {loading ? '検索中...' : '検索'}
         </button>
       </div>
 
@@ -161,14 +161,14 @@ export function QueryTester() {
 
       {results !== null && (
         <div style={styles.results}>
-          <div style={styles.resultHeader}>{results.length} results found</div>
+          <div style={styles.resultHeader}>{results.length} 件の結果</div>
           {results.length === 0 ? (
-            <div style={styles.empty}>No emails match this query</div>
+            <div style={styles.empty}>このクエリに一致するメールはありません</div>
           ) : (
             results.map((email) => (
               <div key={email.id} style={styles.emailItem}>
                 <div style={styles.emailSubject}>
-                  {email.subject || '(No Subject)'}
+                  {email.subject || '(件名なし)'}
                 </div>
                 <div style={styles.emailMeta}>
                   {email.from} - {email.date}
@@ -181,7 +181,7 @@ export function QueryTester() {
       )}
 
       <div style={styles.unfilteredSection}>
-        <div style={styles.sectionTitle}>Unfiltered Emails</div>
+        <div style={styles.sectionTitle}>フィルタ外のメール</div>
         <button
           type="button"
           onClick={handleGetUnfiltered}
@@ -192,23 +192,23 @@ export function QueryTester() {
             ...(loadingUnfiltered ? styles.buttonDisabled : {}),
           }}
         >
-          {loadingUnfiltered ? 'Loading...' : 'Find Emails Without Filters'}
+          {loadingUnfiltered ? '読み込み中...' : 'フィルタ外メールを検索'}
         </button>
 
         {unfilteredEmails !== null && (
           <div style={{ ...styles.results, marginTop: '12px' }}>
             <div style={styles.resultHeader}>
-              {unfilteredEmails.length} unfiltered emails
+              {unfilteredEmails.length} 件のフィルタ外メール
             </div>
             {unfilteredEmails.length === 0 ? (
               <div style={styles.empty}>
-                All recent emails match at least one filter
+                最近のメールはすべていずれかのフィルタに一致しています
               </div>
             ) : (
               unfilteredEmails.map((email) => (
                 <div key={email.id} style={styles.emailItem}>
                   <div style={styles.emailSubject}>
-                    {email.subject || '(No Subject)'}
+                    {email.subject || '(件名なし)'}
                   </div>
                   <div style={styles.emailMeta}>
                     {email.from} - {email.date}

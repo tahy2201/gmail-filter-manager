@@ -135,8 +135,8 @@ export function FilterSync() {
   return (
     <div style={styles.container}>
       <p style={styles.description}>
-        Compare filters in your spreadsheet with Gmail and sync the differences.
-        This will add new filters and remove outdated ones from Gmail.
+        スプレッドシートのフィルタとGmailを比較し、差分を同期します。
+        新しいフィルタの追加と、不要なフィルタの削除を行います。
       </p>
 
       <div>
@@ -149,7 +149,7 @@ export function FilterSync() {
           onClick={fetchPreview}
           disabled={loading}
         >
-          {loading ? 'Loading...' : 'Check Diff'}
+          {loading ? '読み込み中...' : '差分を確認'}
         </button>
 
         {(preview || result) && (
@@ -158,7 +158,7 @@ export function FilterSync() {
             style={styles.button('secondary')}
             onClick={reset}
           >
-            Reset
+            リセット
           </button>
         )}
       </div>
@@ -170,22 +170,22 @@ export function FilterSync() {
           <div style={styles.summaryBox}>
             <div style={styles.summaryRow}>
               <span style={styles.summaryIcon('keep')}>&#10003;</span>
-              <span>To Keep: {preview.summary.keep} filters</span>
+              <span>維持: {preview.summary.keep} 件</span>
             </div>
             <div style={styles.summaryRow}>
               <span style={styles.summaryIcon('create')}>&#43;</span>
-              <span>To Create: {preview.summary.create} filters</span>
+              <span>新規作成: {preview.summary.create} 件</span>
             </div>
             <div style={styles.summaryRow}>
               <span style={styles.summaryIcon('delete')}>&#8722;</span>
-              <span>To Delete: {preview.summary.delete} filters</span>
+              <span>削除: {preview.summary.delete} 件</span>
             </div>
           </div>
 
           {preview.toCreate.length > 0 && (
             <>
               <div style={styles.sectionTitle}>
-                <span style={{ color: '#1a73e8' }}>&#43;</span> Filters to Create
+                <span style={{ color: '#1a73e8' }}>&#43;</span> 作成するフィルタ
               </div>
               <div style={styles.filterList}>
                 {preview.toCreate.map((f) => (
@@ -201,8 +201,7 @@ export function FilterSync() {
           {preview.toDelete.length > 0 && (
             <>
               <div style={styles.sectionTitle}>
-                <span style={{ color: '#ea4335' }}>&#8722;</span> Filters to
-                Delete
+                <span style={{ color: '#ea4335' }}>&#8722;</span> 削除するフィルタ
               </div>
               <div style={styles.filterList}>
                 {preview.toDelete.map((f) => (
@@ -227,7 +226,7 @@ export function FilterSync() {
                   onClick={() => setShowConfirm(true)}
                   disabled={loading}
                 >
-                  Apply Changes
+                  変更を適用
                 </button>
               </div>
             )}
@@ -235,7 +234,7 @@ export function FilterSync() {
           {showConfirm && (
             <div style={styles.confirmDialog}>
               <div style={styles.confirmText}>
-                Are you sure you want to apply these changes to Gmail?
+                この変更をGmailに適用してもよろしいですか？
               </div>
               <button
                 type="button"
@@ -246,21 +245,21 @@ export function FilterSync() {
                 onClick={handleApply}
                 disabled={loading}
               >
-                {loading ? 'Applying...' : 'Yes, Apply'}
+                {loading ? '適用中...' : 'はい、適用する'}
               </button>
               <button
                 type="button"
                 style={styles.button('secondary')}
                 onClick={() => setShowConfirm(false)}
               >
-                Cancel
+                キャンセル
               </button>
             </div>
           )}
 
           {preview.summary.create === 0 && preview.summary.delete === 0 && (
             <div style={styles.success}>
-              Gmail filters are in sync with your spreadsheet!
+              Gmailのフィルタはスプレッドシートと同期済みです！
             </div>
           )}
         </>
@@ -269,16 +268,16 @@ export function FilterSync() {
       {result && (
         <div style={styles.summaryBox}>
           <div style={styles.success}>
-            <strong>Sync Complete!</strong>
+            <strong>同期完了！</strong>
             <br />
-            Created: {result.created} | Deleted: {result.deleted} | Errors:{' '}
-            {result.errors.length}
+            作成: {result.created} 件 | 削除: {result.deleted} 件 | エラー:{' '}
+            {result.errors.length} 件
           </div>
 
           {result.errors.length > 0 && (
             <>
               <div style={{ ...styles.sectionTitle, color: '#c5221f' }}>
-                Errors:
+                エラー:
               </div>
               {result.errors.map((err) => (
                 <div

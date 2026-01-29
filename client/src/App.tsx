@@ -63,35 +63,35 @@ function App() {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <h1 style={styles.title}>Gmail Filter Manager</h1>
+        <h1 style={styles.title}>Gmail フィルタ管理</h1>
         <nav style={styles.tabs}>
           <button
             type="button"
             style={styles.tab(activeTab === 'filters')}
             onClick={() => setActiveTab('filters')}
           >
-            Filters
+            フィルタ一覧
           </button>
           <button
             type="button"
             style={styles.tab(activeTab === 'query')}
             onClick={() => setActiveTab('query')}
           >
-            Query Tester
+            クエリテスト
           </button>
           <button
             type="button"
             style={styles.tab(activeTab === 'delete')}
             onClick={() => setActiveTab('delete')}
           >
-            Delete Rules
+            削除ルール
           </button>
           <button
             type="button"
             style={styles.tab(activeTab === 'sync')}
             onClick={() => setActiveTab('sync')}
           >
-            Sync to Gmail
+            Gmail同期
           </button>
         </nav>
       </header>

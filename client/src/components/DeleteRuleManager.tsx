@@ -133,13 +133,13 @@ export function DeleteRuleManager() {
     setMessage(null)
     const deleted = await executeRule(rule.labelName, rule.delayDays)
     if (deleted >= 0) {
-      setMessage(`Deleted ${deleted} emails from "${rule.labelName}"`)
+      setMessage(`「${rule.labelName}」から ${deleted} 件のメールを削除しました`)
     }
     setExecuting(null)
   }
 
   if (loading) {
-    return <div style={styles.loading}>Loading delete rules...</div>
+    return <div style={styles.loading}>削除ルールを読み込み中...</div>
   }
 
   if (error) {
@@ -153,22 +153,22 @@ export function DeleteRuleManager() {
       {message && <div style={styles.success}>{message}</div>}
 
       <div style={styles.card}>
-        <h3 style={{ marginBottom: '16px', color: '#1a73e8' }}>Delete Rules</h3>
+        <h3 style={{ marginBottom: '16px', color: '#1a73e8' }}>削除ルール</h3>
         {rules.length === 0 ? (
           <div style={{ color: '#5f6368', padding: '16px 0' }}>
-            No delete rules configured
+            削除ルールが設定されていません
           </div>
         ) : (
           rules.map((rule, index) => (
             <div key={rule.labelName} style={styles.row}>
               <div style={styles.label}>{rule.labelName}</div>
-              <div style={styles.days}>{rule.delayDays} days</div>
+              <div style={styles.days}>{rule.delayDays} 日</div>
               <button
                 type="button"
                 style={styles.toggle(rule.enabled)}
                 onClick={() => handleToggle(index)}
               >
-                {rule.enabled ? 'Enabled' : 'Disabled'}
+                {rule.enabled ? '有効' : '無効'}
               </button>
               <button
                 type="button"
@@ -176,14 +176,14 @@ export function DeleteRuleManager() {
                 onClick={() => handleExecute(rule)}
                 disabled={!rule.enabled || executing === rule.labelName}
               >
-                {executing === rule.labelName ? 'Running...' : 'Run Now'}
+                {executing === rule.labelName ? '実行中...' : '今すぐ実行'}
               </button>
               <button
                 type="button"
                 style={{ ...styles.button, ...styles.buttonDanger }}
                 onClick={() => handleDelete(index)}
               >
-                Delete
+                削除
               </button>
             </div>
           ))
@@ -195,7 +195,7 @@ export function DeleteRuleManager() {
             onChange={(e) => setNewLabel(e.target.value)}
             style={styles.select}
           >
-            <option value="">Select label...</option>
+            <option value="">ラベルを選択...</option>
             {userLabels.map((l) => (
               <option key={l.id} value={l.name}>
                 {l.name}
@@ -208,7 +208,7 @@ export function DeleteRuleManager() {
             onChange={(e) => setNewDays(Number(e.target.value))}
             min={1}
             style={styles.input}
-            placeholder="Days"
+            placeholder="日数"
           />
           <button
             type="button"
@@ -216,7 +216,7 @@ export function DeleteRuleManager() {
             onClick={handleAdd}
             disabled={!newLabel}
           >
-            Add Rule
+            ルールを追加
           </button>
         </div>
       </div>

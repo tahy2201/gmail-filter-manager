@@ -63,7 +63,7 @@ const styles = {
 function groupByLabel(filters: FilterEntry[]): Map<string, FilterEntry[]> {
   const groups = new Map<string, FilterEntry[]>()
   for (const filter of filters) {
-    const label = filter.action.label || '(No Label)'
+    const label = filter.action.label || '(ラベルなし)'
     const topLevel = label.split('/')[0]
     if (!groups.has(topLevel)) {
       groups.set(topLevel, [])
@@ -115,7 +115,7 @@ export function FilterList() {
   )
 
   if (loading) {
-    return <div style={styles.loading}>Loading filters...</div>
+    return <div style={styles.loading}>フィルタを読み込み中...</div>
   }
 
   if (error) {
@@ -127,7 +127,7 @@ export function FilterList() {
       <div style={styles.toolbar}>
         <input
           type="text"
-          placeholder="Search filters..."
+          placeholder="フィルタを検索..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={styles.searchInput}
@@ -137,7 +137,7 @@ export function FilterList() {
           onChange={(e) => setLabelFilter(e.target.value)}
           style={styles.select}
         >
-          <option value="">All Labels</option>
+          <option value="">すべてのラベル</option>
           {labels.map((l) => (
             <option key={l} value={l}>
               {l}
@@ -145,7 +145,7 @@ export function FilterList() {
           ))}
         </select>
         <span style={styles.stats}>
-          {filteredFilters.length} / {filters.length} filters
+          {filteredFilters.length} / {filters.length} 件
         </span>
       </div>
 

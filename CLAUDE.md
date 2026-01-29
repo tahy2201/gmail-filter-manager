@@ -37,7 +37,8 @@ gmail-filter-manager/
 
 ## デプロイ情報
 - **Script ID**: `1G9JDl2wTuWHqBQB04U5tqzqCiBgz0kablKZIEwdv6J-KZVES40sHB_G-`
-- **WebアプリURL**: `https://script.google.com/macros/s/AKfycbwPJEr_oxQEhpDmfEJjjQ0GPtmk5GWummIU3uQqO9_QAQaFA3iyDXIKTPzd7d0qqQXQeQ/exec`
+- **WebアプリURL (HEAD)**: `https://script.google.com/macros/s/AKfycbwru5VgwLUeuVfTJ9hqiYQsfdKC6jq7zA6HuMHV5go1/exec`
+  - ※ `@HEAD`デプロイメント。`clasp push`だけで常に最新コードが反映される
 - **GASエディタ**: `https://script.google.com/d/1G9JDl2wTuWHqBQB04U5tqzqCiBgz0kablKZIEwdv6J-KZVES40sHB_G-/edit`
 
 ## スプレッドシート構成
@@ -62,10 +63,9 @@ gmail-filter-manager/
 
 ## 開発コマンド
 ```bash
-# ビルド & デプロイ
+# ビルド & デプロイ（@HEAD使用のため clasp push のみで反映される）
 cd client && npm run build  # React ビルド → server/index.html
-clasp push --force          # GAS にプッシュ
-clasp deploy                # 新バージョンをデプロイ
+clasp push --force          # GAS にプッシュ → 即座に反映
 
 # 開発
 cd client && npm run dev    # Vite dev server（GAS APIは動作しない）
