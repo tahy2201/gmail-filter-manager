@@ -1,9 +1,23 @@
 import { useState } from 'react'
 import { DeleteRuleManager } from './components/DeleteRuleManager'
 import { FilterList } from './components/FilterList'
+import { FilterSync } from './components/FilterSync'
 import { QueryTester } from './components/QueryTester'
 
-type Tab = 'filters' | 'query' | 'delete'
+type Tab = 'filters' | 'query' | 'delete' | 'sync'
+
+function renderTabContent(tab: Tab): React.ReactNode {
+  switch (tab) {
+    case 'filters':
+      return <FilterList />
+    case 'query':
+      return <QueryTester />
+    case 'delete':
+      return <DeleteRuleManager />
+    case 'sync':
+      return <FilterSync />
+  }
+}
 
 const styles = {
   container: {
@@ -72,13 +86,16 @@ function App() {
           >
             Delete Rules
           </button>
+          <button
+            type="button"
+            style={styles.tab(activeTab === 'sync')}
+            onClick={() => setActiveTab('sync')}
+          >
+            Sync to Gmail
+          </button>
         </nav>
       </header>
-      <main style={styles.content}>
-        {activeTab === 'filters' && <FilterList />}
-        {activeTab === 'query' && <QueryTester />}
-        {activeTab === 'delete' && <DeleteRuleManager />}
-      </main>
+      <main style={styles.content}>{renderTabContent(activeTab)}</main>
     </div>
   )
 }

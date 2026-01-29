@@ -224,3 +224,30 @@ function setup() {
     spreadsheetId: ss.getId()
   }
 }
+
+/**
+ * フィルタ差分のプレビューを取得
+ * @returns {Object} 差分プレビュー
+ */
+function previewFilterDiff() {
+  try {
+    return previewFiltersDiff()
+  } catch (error) {
+    console.error('Error previewing filter diff:', error)
+    throw new Error(`Failed to preview filter diff: ${error.message}`)
+  }
+}
+
+/**
+ * フィルタ差分を適用
+ * @param {boolean} dryRun - true の場合は実際には適用しない
+ * @returns {Object} 適用結果
+ */
+function applyFilterDiff(dryRun) {
+  try {
+    return applyFiltersDiff(dryRun === true)
+  } catch (error) {
+    console.error('Error applying filter diff:', error)
+    throw new Error(`Failed to apply filter diff: ${error.message}`)
+  }
+}
