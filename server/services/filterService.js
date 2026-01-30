@@ -408,7 +408,6 @@ function applyFilterToExistingMessages(filter) {
 
       pageToken = response.nextPageToken
     } while (pageToken && messages.length < 1000) // 最大1000件まで
-
   } catch (e) {
     return { success: false, count: 0, error: `Search failed: ${e.message}` }
   }
@@ -436,14 +435,17 @@ function applyFilterToExistingMessages(filter) {
   const batchSize = 100
   for (let i = 0; i < messages.length; i += batchSize) {
     const batch = messages.slice(i, i + batchSize)
-    const messageIds = batch.map(m => m.id)
+    const messageIds = batch.map((m) => m.id)
 
     try {
-      Gmail.Users.Messages.batchModify({
-        ids: messageIds,
-        addLabelIds: addLabelIds,
-        removeLabelIds: removeLabelIds.length > 0 ? removeLabelIds : undefined
-      }, 'me')
+      Gmail.Users.Messages.batchModify(
+        {
+          ids: messageIds,
+          addLabelIds: addLabelIds,
+          removeLabelIds: removeLabelIds.length > 0 ? removeLabelIds : undefined
+        },
+        'me'
+      )
 
       appliedCount += batch.length
     } catch (e) {
