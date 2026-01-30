@@ -5,7 +5,6 @@
 import type {
   DeleteRule,
   EmailPreview,
-  FilterDiffPreview,
   FilterDiffResult,
   FilterEntry,
   Label,
@@ -37,7 +36,6 @@ interface GasRunner {
   getUnfilteredEmails: (max: number) => void
   getDataSpreadsheetUrl: () => void
   setup: () => void
-  previewFilterDiff: () => void
   applyFilterDiff: (dryRun: boolean) => void
 }
 
@@ -119,11 +117,20 @@ export const gasApi = {
   setup: (): Promise<{ spreadsheetUrl: string; spreadsheetId: string }> =>
     runGasFunction('setup'),
 
-  /** フィルタ差分プレビューを取得 */
-  previewFilterDiff: (): Promise<FilterDiffPreview> =>
-    runGasFunction('previewFilterDiff'),
-
-  /** フィルタ差分を適用 */
+  /** フィルタ差分を適用（自動同期用） */
   applyFilterDiff: (dryRun = false): Promise<FilterDiffResult> =>
     runGasFunction('applyFilterDiff', dryRun),
+
+  /** 既存の一致するメールにフィルタを適用 */
+  applyToExistingMessages: (filter: {
+    criteria: FilterEntry['criteria']
+    action: FilterEntry['action']
+  }): Promise<{
+    success: boolean
+    count: number
+    total?: number
+    message?: string
+    error?: string
+    errors?: string[]
+  }> => runGasFunction('applyToExistingMessages', filter),
 }

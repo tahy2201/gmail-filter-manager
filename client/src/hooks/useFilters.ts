@@ -5,6 +5,7 @@ import type { FilterEntry } from '../types'
 export function useFilters() {
   const [filters, setFilters] = useState<FilterEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchFilters = useCallback(async () => {
@@ -24,18 +25,22 @@ export function useFilters() {
     fetchFilters()
   }, [fetchFilters])
 
-  const saveFilters = useCallback(async (newFilters: FilterEntry[]) => {
-    setLoading(true)
+  // 楽観的更新版のsaveFilters（自動Gmail同期付き）
+  const saveFilters = useCallback(async (newFilters: FilterEntry[], previousFilters: FilterEntry[]) => {
+    setSaving(true)
     setError(null)
     try {
       await gasApi.saveFilters(newFilters)
-      setFilters(newFilters)
+      // 自動でGmailに同期
+      await gasApi.applyFilterDiff(false)
       return true
     } catch (e) {
+      // エラー時はロールバック
+      setFilters(previousFilters)
       setError(e instanceof Error ? e.message : 'Failed to save filters')
       return false
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }, [])
 
@@ -57,31 +62,51 @@ export function useFilters() {
     [fetchFilters],
   )
 
+  // 楽観的更新: 即座にUIを更新し、バックグラウンドで保存
   const addFilter = useCallback(
     async (filter: Omit<FilterEntry, 'id'>) => {
       const newFilter: FilterEntry = {
         ...filter,
         id: `filter_${Date.now()}`,
       }
-      return saveFilters([...filters, newFilter])
+      const previousFilters = filters
+      const newFilters = [...filters, newFilter]
+
+      // 即座にUIを更新
+      setFilters(newFilters)
+
+      // バックグラウンドで保存
+      return saveFilters(newFilters, previousFilters)
     },
     [filters, saveFilters],
   )
 
   const updateFilter = useCallback(
     async (filterId: string, updates: Partial<FilterEntry>) => {
+      const previousFilters = filters
       const newFilters = filters.map((f) =>
         f.id === filterId ? { ...f, ...updates } : f,
       )
-      return saveFilters(newFilters)
+
+      // 即座にUIを更新
+      setFilters(newFilters)
+
+      // バックグラウンドで保存
+      return saveFilters(newFilters, previousFilters)
     },
     [filters, saveFilters],
   )
 
   const deleteFilter = useCallback(
     async (filterId: string) => {
+      const previousFilters = filters
       const newFilters = filters.filter((f) => f.id !== filterId)
-      return saveFilters(newFilters)
+
+      // 即座にUIを更新
+      setFilters(newFilters)
+
+      // バックグラウンドで保存
+      return saveFilters(newFilters, previousFilters)
     },
     [filters, saveFilters],
   )
@@ -89,9 +114,9 @@ export function useFilters() {
   return {
     filters,
     loading,
+    saving,
     error,
     refetch: fetchFilters,
-    saveFilters,
     importFromXml,
     addFilter,
     updateFilter,
