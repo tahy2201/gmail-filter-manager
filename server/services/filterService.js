@@ -341,3 +341,126 @@ function deleteFilter(filterId) {
 
   return saveFiltersToSpreadsheet(newFilters)
 }
+
+/**
+ * フィルタ条件から Gmail 検索クエリを構築
+ * @param {Object} criteria - フィルタ条件
+ * @returns {string} Gmail 検索クエリ
+ */
+function buildSearchQuery(criteria) {
+  const parts = []
+
+  if (criteria.from) {
+    parts.push(`from:(${criteria.from})`)
+  }
+  if (criteria.to) {
+    parts.push(`to:(${criteria.to})`)
+  }
+  if (criteria.subject) {
+    parts.push(`subject:(${criteria.subject})`)
+  }
+  if (criteria.hasTheWord) {
+    parts.push(`(${criteria.hasTheWord})`)
+  }
+  if (criteria.doesNotHaveTheWord) {
+    parts.push(`-(${criteria.doesNotHaveTheWord})`)
+  }
+
+  return parts.join(' ')
+}
+
+/**
+ * 既存の一致するメールにフィルタアクションを適用
+ * @param {Object} filter - フィルタ (criteria と action を含む)
+ * @returns {Object} 適用結果 { success, count, errors }
+ */
+function applyFilterToExistingMessages(filter) {
+  const query = buildSearchQuery(filter.criteria)
+
+  if (!query) {
+    return { success: false, count: 0, error: 'No search criteria specified' }
+  }
+
+  // ラベルが指定されていない場合は何もしない
+  if (!filter.action.label) {
+    return { success: true, count: 0, message: 'No label to apply' }
+  }
+
+  // ラベルを取得または作成
+  const label = getOrCreateLabel(filter.action.label)
+
+  // 一致するメッセージを検索
+  let messages = []
+  let pageToken = null
+  const maxResults = 500 // 一度に取得する最大数
+
+  try {
+    do {
+      const response = Gmail.Users.Messages.list('me', {
+        q: query,
+        maxResults: maxResults,
+        pageToken: pageToken
+      })
+
+      if (response.messages) {
+        messages = messages.concat(response.messages)
+      }
+
+      pageToken = response.nextPageToken
+    } while (pageToken && messages.length < 1000) // 最大1000件まで
+
+  } catch (e) {
+    return { success: false, count: 0, error: `Search failed: ${e.message}` }
+  }
+
+  if (messages.length === 0) {
+    return { success: true, count: 0, message: 'No matching messages found' }
+  }
+
+  // メッセージにラベルを適用
+  let appliedCount = 0
+  const errors = []
+
+  // バッチ処理用のリクエストを構築
+  const addLabelIds = [label.id]
+  const removeLabelIds = []
+
+  if (filter.action.shouldArchive) {
+    removeLabelIds.push('INBOX')
+  }
+  if (filter.action.shouldMarkAsRead) {
+    removeLabelIds.push('UNREAD')
+  }
+
+  // バッチ修正 (100件ずつ)
+  const batchSize = 100
+  for (let i = 0; i < messages.length; i += batchSize) {
+    const batch = messages.slice(i, i + batchSize)
+    const messageIds = batch.map(m => m.id)
+
+    try {
+      Gmail.Users.Messages.batchModify({
+        ids: messageIds,
+        addLabelIds: addLabelIds,
+        removeLabelIds: removeLabelIds.length > 0 ? removeLabelIds : undefined
+      }, 'me')
+
+      appliedCount += batch.length
+    } catch (e) {
+      errors.push(`Batch ${Math.floor(i / batchSize) + 1} failed: ${e.message}`)
+    }
+  }
+
+  addHistory(
+    'APPLY_TO_EXISTING',
+    filter.action.label,
+    `Applied to ${appliedCount}/${messages.length} messages`
+  )
+
+  return {
+    success: errors.length === 0,
+    count: appliedCount,
+    total: messages.length,
+    errors: errors
+  }
+}
