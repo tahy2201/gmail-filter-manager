@@ -87,25 +87,18 @@ export function RuleManager() {
     try {
       const result = await gasApi.applyToExistingMessages({ criteria, action })
 
-      if (result.count > 0) {
-        // 部分的成功の場合は警告を含める
-        if (result.errors && result.errors.length > 0) {
-          setSnackbarMessage(
-            `${result.count}/${result.total}件のメールにラベルを適用（一部エラーあり）`
-          )
-        } else if (result.total && result.total > result.count) {
-          setSnackbarMessage(`${result.count}/${result.total}件のメールにラベルを適用しました`)
-        } else {
-          setSnackbarMessage(`${result.count}件のメールにラベルを適用しました`)
-        }
+      if (result.error) {
+        setSnackbarMessage(`エラー: ${result.error}`)
+      } else if (result.count > 0) {
+        const hasErrors = result.errors && result.errors.length > 0
+        const suffix = hasErrors ? '（一部エラーあり）' : ''
+        setSnackbarMessage(`${result.count}件のメールにラベルを適用しました${suffix}`)
       } else if (result.message) {
         setSnackbarMessage(result.message)
-      } else if (result.error) {
-        setSnackbarMessage(`エラー: ${result.error}`)
       }
     } catch (e) {
-      const message = e instanceof Error ? e.message : '不明なエラー'
-      setSnackbarMessage(`既存メールへの適用に失敗: ${message}`)
+      const msg = e instanceof Error ? e.message : '不明なエラー'
+      setSnackbarMessage(`既存メールへの適用に失敗: ${msg}`)
     }
   }
 
