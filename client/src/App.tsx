@@ -1,102 +1,102 @@
 import { useState } from 'react'
-import { DeleteRuleManager } from './components/DeleteRuleManager'
-import { FilterList } from './components/FilterList'
-import { FilterSync } from './components/FilterSync'
+import {
+  Box,
+  Container,
+  CssBaseline,
+  Tab,
+  Tabs,
+  ThemeProvider,
+  Typography,
+  createTheme,
+} from '@mui/material'
 import { QueryTester } from './components/QueryTester'
+import { RuleManager } from './components/RuleManager'
 
-type Tab = 'filters' | 'query' | 'delete' | 'sync'
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1a73e8',
+    },
+    secondary: {
+      main: '#5f6368',
+    },
+  },
+  typography: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+        },
+      },
+    },
+  },
+})
 
-function renderTabContent(tab: Tab): React.ReactNode {
-  switch (tab) {
-    case 'filters':
-      return <FilterList />
-    case 'query':
-      return <QueryTester />
-    case 'delete':
-      return <DeleteRuleManager />
-    case 'sync':
-      return <FilterSync />
-  }
+interface TabPanelProps {
+  children?: React.ReactNode
+  index: number
+  value: number
 }
 
-const styles = {
-  container: {
-    fontFamily:
-      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '20px',
-  },
-  header: {
-    marginBottom: '20px',
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: 'bold' as const,
-    marginBottom: '16px',
-    color: '#1a73e8',
-  },
-  tabs: {
-    display: 'flex',
-    gap: '8px',
-    borderBottom: '1px solid #e0e0e0',
-    paddingBottom: '8px',
-  },
-  tab: (active: boolean) =>
-    ({
-      padding: '8px 16px',
-      border: 'none',
-      borderRadius: '4px 4px 0 0',
-      cursor: 'pointer',
-      backgroundColor: active ? '#1a73e8' : '#f1f3f4',
-      color: active ? '#fff' : '#5f6368',
-      fontWeight: active ? 'bold' : 'normal',
-    }) as React.CSSProperties,
-  content: {
-    padding: '20px 0',
-  },
+function TabPanel({ children, value, index }: TabPanelProps) {
+  return (
+    <Box
+      role="tabpanel"
+      hidden={value !== index}
+      id={`tabpanel-${index}`}
+      aria-labelledby={`tab-${index}`}
+      sx={{ py: 2 }}
+    >
+      {value === index && children}
+    </Box>
+  )
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('filters')
+  const [tabValue, setTabValue] = useState(0)
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue)
+  }
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.title}>Gmail フィルタ管理</h1>
-        <nav style={styles.tabs}>
-          <button
-            type="button"
-            style={styles.tab(activeTab === 'filters')}
-            onClick={() => setActiveTab('filters')}
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Container maxWidth="xl" sx={{ py: 2 }}>
+        <Typography
+          variant="h5"
+          component="h1"
+          sx={{
+            fontWeight: 'bold',
+            color: 'primary.main',
+            mb: 2,
+          }}
+        >
+          Gmail フィルタ管理
+        </Typography>
+
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            aria-label="フィルタ管理タブ"
           >
-            フィルタ一覧
-          </button>
-          <button
-            type="button"
-            style={styles.tab(activeTab === 'query')}
-            onClick={() => setActiveTab('query')}
-          >
-            クエリテスト
-          </button>
-          <button
-            type="button"
-            style={styles.tab(activeTab === 'delete')}
-            onClick={() => setActiveTab('delete')}
-          >
-            削除ルール
-          </button>
-          <button
-            type="button"
-            style={styles.tab(activeTab === 'sync')}
-            onClick={() => setActiveTab('sync')}
-          >
-            Gmail同期
-          </button>
-        </nav>
-      </header>
-      <main style={styles.content}>{renderTabContent(activeTab)}</main>
-    </div>
+            <Tab label="ルール管理" id="tab-0" aria-controls="tabpanel-0" />
+            <Tab label="クエリテスト" id="tab-1" aria-controls="tabpanel-1" />
+          </Tabs>
+        </Box>
+
+        <TabPanel value={tabValue} index={0}>
+          <RuleManager />
+        </TabPanel>
+        <TabPanel value={tabValue} index={1}>
+          <QueryTester />
+        </TabPanel>
+      </Container>
+    </ThemeProvider>
   )
 }
 
