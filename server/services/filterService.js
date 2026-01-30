@@ -369,6 +369,11 @@ function buildSearchQuery(criteria) {
   return parts.join(' ')
 }
 
+// 既存メール適用の定数
+const MAX_MESSAGES_PER_PAGE = 500
+const MAX_MESSAGES_TO_PROCESS = 1000
+const BATCH_MODIFY_SIZE = 100
+
 /**
  * 既存の一致するメールにフィルタアクションを適用
  * @param {Object} filter - フィルタ (criteria と action を含む)
@@ -390,24 +395,23 @@ function applyFilterToExistingMessages(filter) {
   const label = getOrCreateLabel(filter.action.label)
 
   // 一致するメッセージを検索
-  let messages = []
+  const messages = []
   let pageToken = null
-  const maxResults = 500 // 一度に取得する最大数
 
   try {
     do {
       const response = Gmail.Users.Messages.list('me', {
         q: query,
-        maxResults: maxResults,
+        maxResults: MAX_MESSAGES_PER_PAGE,
         pageToken: pageToken
       })
 
       if (response.messages) {
-        messages = messages.concat(response.messages)
+        messages.push(...response.messages)
       }
 
       pageToken = response.nextPageToken
-    } while (pageToken && messages.length < 1000) // 最大1000件まで
+    } while (pageToken && messages.length < MAX_MESSAGES_TO_PROCESS)
   } catch (e) {
     return { success: false, count: 0, error: `Search failed: ${e.message}` }
   }
@@ -431,10 +435,9 @@ function applyFilterToExistingMessages(filter) {
     removeLabelIds.push('UNREAD')
   }
 
-  // バッチ修正 (100件ずつ)
-  const batchSize = 100
-  for (let i = 0; i < messages.length; i += batchSize) {
-    const batch = messages.slice(i, i + batchSize)
+  // バッチ修正
+  for (let i = 0; i < messages.length; i += BATCH_MODIFY_SIZE) {
+    const batch = messages.slice(i, i + BATCH_MODIFY_SIZE)
     const messageIds = batch.map((m) => m.id)
 
     try {
@@ -449,7 +452,7 @@ function applyFilterToExistingMessages(filter) {
 
       appliedCount += batch.length
     } catch (e) {
-      errors.push(`Batch ${Math.floor(i / batchSize) + 1} failed: ${e.message}`)
+      errors.push(`Batch ${Math.floor(i / BATCH_MODIFY_SIZE) + 1} failed: ${e.message}`)
     }
   }
 

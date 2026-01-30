@@ -30,12 +30,23 @@ export function useFilters() {
     setSaving(true)
     setError(null)
     try {
+      // スプレッドシートに保存
       await gasApi.saveFilters(newFilters)
+
       // 自動でGmailに同期
-      await gasApi.applyFilterDiff(false)
+      try {
+        await gasApi.applyFilterDiff(false)
+      } catch (syncError) {
+        // スプレッドシートには保存済み、Gmail同期だけ失敗
+        const message = syncError instanceof Error ? syncError.message : 'Unknown error'
+        setError(`保存完了。Gmail同期に失敗: ${message}`)
+        // スプレッドシートには保存されているのでロールバックしない
+        return true
+      }
+
       return true
     } catch (e) {
-      // エラー時はロールバック
+      // スプレッドシート保存自体が失敗 → ロールバック
       setFilters(previousFilters)
       setError(e instanceof Error ? e.message : 'Failed to save filters')
       return false

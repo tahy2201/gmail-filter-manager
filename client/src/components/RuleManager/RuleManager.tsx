@@ -79,25 +79,41 @@ export function RuleManager() {
     ? filters.find((f) => f.id === deletingFilterId)
     : null
 
+  // 既存メールへのフィルタ適用を実行し、結果をSnackbarで表示
+  const applyToExistingAndNotify = async (
+    criteria: FilterEntry['criteria'],
+    action: FilterEntry['action']
+  ) => {
+    try {
+      const result = await gasApi.applyToExistingMessages({ criteria, action })
+
+      if (result.count > 0) {
+        // 部分的成功の場合は警告を含める
+        if (result.errors && result.errors.length > 0) {
+          setSnackbarMessage(
+            `${result.count}/${result.total}件のメールにラベルを適用（一部エラーあり）`
+          )
+        } else if (result.total && result.total > result.count) {
+          setSnackbarMessage(`${result.count}/${result.total}件のメールにラベルを適用しました`)
+        } else {
+          setSnackbarMessage(`${result.count}件のメールにラベルを適用しました`)
+        }
+      } else if (result.message) {
+        setSnackbarMessage(result.message)
+      } else if (result.error) {
+        setSnackbarMessage(`エラー: ${result.error}`)
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : '不明なエラー'
+      setSnackbarMessage(`既存メールへの適用に失敗: ${message}`)
+    }
+  }
+
   const handleCreate = async (filterData: Omit<FilterEntry, 'id'>, applyToExisting?: boolean) => {
     const success = await addFilter(filterData)
     if (success) {
-      // 既存メールへの適用
       if (applyToExisting && filterData.action.label) {
-        try {
-          const result = await gasApi.applyToExistingMessages({
-            criteria: filterData.criteria,
-            action: filterData.action,
-          })
-          if (result.count > 0) {
-            setSnackbarMessage(`${result.count}件のメールにラベルを適用しました`)
-          } else if (result.message) {
-            setSnackbarMessage(result.message)
-          }
-        } catch (e) {
-          console.error('Failed to apply to existing messages:', e)
-          setSnackbarMessage('既存メールへの適用に失敗しました')
-        }
+        await applyToExistingAndNotify(filterData.criteria, filterData.action)
       }
       setIsCreateModalOpen(false)
     }
@@ -106,22 +122,8 @@ export function RuleManager() {
   const handleUpdate = async (filterData: FilterEntry, applyToExisting?: boolean) => {
     const success = await updateFilter(filterData.id, filterData)
     if (success) {
-      // 既存メールへの適用
       if (applyToExisting && filterData.action.label) {
-        try {
-          const result = await gasApi.applyToExistingMessages({
-            criteria: filterData.criteria,
-            action: filterData.action,
-          })
-          if (result.count > 0) {
-            setSnackbarMessage(`${result.count}件のメールにラベルを適用しました`)
-          } else if (result.message) {
-            setSnackbarMessage(result.message)
-          }
-        } catch (e) {
-          console.error('Failed to apply to existing messages:', e)
-          setSnackbarMessage('既存メールへの適用に失敗しました')
-        }
+        await applyToExistingAndNotify(filterData.criteria, filterData.action)
       }
       setEditingFilter(null)
     }
