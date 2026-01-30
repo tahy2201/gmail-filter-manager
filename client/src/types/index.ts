@@ -65,18 +65,6 @@ export interface FilterDiffItem {
   label?: string
 }
 
-/** フィルタ差分プレビュー */
-export interface FilterDiffPreview {
-  toCreate: FilterDiffItem[]
-  toDelete: FilterDiffItem[]
-  toKeepCount: number
-  summary: {
-    create: number
-    delete: number
-    keep: number
-  }
-}
-
 /** フィルタ差分適用結果 */
 export interface FilterDiffResult {
   created: number
@@ -89,4 +77,11 @@ export interface FilterDiffResult {
   dryRun?: boolean
   wouldCreate?: number
   wouldDelete?: number
+}
+
+/** ラベルグループデータ（統合ビュー用） */
+export interface LabelGroupData {
+  labelName: string
+  filters: FilterEntry[]
+  deleteRule: DeleteRule | null
 }
