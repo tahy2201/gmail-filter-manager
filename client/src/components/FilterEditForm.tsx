@@ -1,92 +1,26 @@
 import { useState } from 'react'
+import {
+  Alert,
+  Box,
+  Button,
+  Checkbox,
+  CircularProgress,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material'
 import type { FilterEntry, Label } from '../types'
-
-const styles = {
-  form: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '20px',
-  },
-  section: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px',
-  },
-  sectionTitle: {
-    fontSize: '14px',
-    fontWeight: 'bold' as const,
-    color: '#1a73e8',
-    paddingBottom: '8px',
-    borderBottom: '1px solid #e0e0e0',
-  },
-  field: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '4px',
-  },
-  label: {
-    fontSize: '13px',
-    color: '#5f6368',
-  },
-  input: {
-    padding: '8px 12px',
-    border: '1px solid #dadce0',
-    borderRadius: '4px',
-    fontSize: '14px',
-  },
-  select: {
-    padding: '8px 12px',
-    border: '1px solid #dadce0',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: '#fff',
-  },
-  checkboxRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  checkbox: {
-    width: '16px',
-    height: '16px',
-  },
-  checkboxLabel: {
-    fontSize: '14px',
-    color: '#202124',
-  },
-  buttons: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '12px',
-    marginTop: '8px',
-  },
-  button: (variant: 'primary' | 'secondary') => ({
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: 'bold' as const,
-    fontSize: '14px',
-    backgroundColor: variant === 'primary' ? '#1a73e8' : '#f1f3f4',
-    color: variant === 'primary' ? '#fff' : '#5f6368',
-  }),
-  buttonDisabled: {
-    opacity: 0.6,
-    cursor: 'not-allowed',
-  },
-  error: {
-    padding: '12px',
-    backgroundColor: '#fce8e6',
-    color: '#c5221f',
-    borderRadius: '4px',
-    fontSize: '13px',
-  },
-}
 
 interface Props {
   filter?: FilterEntry
   labels: Label[]
-  onSave: (filter: Omit<FilterEntry, 'id'> | FilterEntry) => void
+  onSave: (filter: Omit<FilterEntry, 'id'> | FilterEntry, applyToExisting?: boolean) => void
   onCancel: () => void
   loading?: boolean
 }
@@ -117,6 +51,7 @@ export function FilterEditForm({
   const [shouldNeverSpam, setShouldNeverSpam] = useState(
     filter?.action.shouldNeverSpam || false,
   )
+  const [applyToExisting, setApplyToExisting] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
 
   const userLabels = labels.filter((l) => l.type === 'user')
@@ -160,172 +95,169 @@ export function FilterEditForm({
     }
 
     if (filter) {
-      onSave({ ...filterData, id: filter.id })
+      onSave({ ...filterData, id: filter.id }, applyToExisting)
     } else {
-      onSave(filterData)
+      onSave(filterData, applyToExisting)
     }
   }
 
   return (
-    <form style={styles.form} onSubmit={handleSubmit}>
-      {validationError && <div style={styles.error}>{validationError}</div>}
+    <Box component="form" onSubmit={handleSubmit}>
+      <Stack spacing={3}>
+        {validationError && <Alert severity="error">{validationError}</Alert>}
 
-      <div style={styles.section}>
-        <div style={styles.sectionTitle}>条件 (Criteria)</div>
+        {/* 条件セクション */}
+        <Box>
+          <Typography variant="subtitle2" color="primary" gutterBottom sx={{ pb: 1, borderBottom: 1, borderColor: 'divider' }}>
+            条件 (Criteria)
+          </Typography>
 
-        <div style={styles.field}>
-          <label style={styles.label} htmlFor="from">
-            差出人 (From)
-          </label>
-          <input
-            id="from"
-            type="text"
-            style={styles.input}
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            placeholder="例: newsletter@example.com"
-          />
-        </div>
+          <Stack spacing={2} sx={{ mt: 2 }}>
+            <TextField
+              label="差出人 (From)"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              placeholder="例: newsletter@example.com"
+              size="small"
+              fullWidth
+            />
 
-        <div style={styles.field}>
-          <label style={styles.label} htmlFor="to">
-            宛先 (To)
-          </label>
-          <input
-            id="to"
-            type="text"
-            style={styles.input}
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            placeholder="例: me@example.com"
-          />
-        </div>
+            <TextField
+              label="宛先 (To)"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              placeholder="例: me@example.com"
+              size="small"
+              fullWidth
+            />
 
-        <div style={styles.field}>
-          <label style={styles.label} htmlFor="subject">
-            件名 (Subject)
-          </label>
-          <input
-            id="subject"
-            type="text"
-            style={styles.input}
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            placeholder="例: [重要]"
-          />
-        </div>
+            <TextField
+              label="件名 (Subject)"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="例: [重要]"
+              size="small"
+              fullWidth
+            />
 
-        <div style={styles.field}>
-          <label style={styles.label} htmlFor="hasTheWord">
-            含むキーワード (Has the words)
-          </label>
-          <input
-            id="hasTheWord"
-            type="text"
-            style={styles.input}
-            value={hasTheWord}
-            onChange={(e) => setHasTheWord(e.target.value)}
-            placeholder="例: unsubscribe"
-          />
-        </div>
+            <TextField
+              label="含むキーワード (Has the words)"
+              value={hasTheWord}
+              onChange={(e) => setHasTheWord(e.target.value)}
+              placeholder="例: unsubscribe"
+              size="small"
+              fullWidth
+            />
 
-        <div style={styles.field}>
-          <label style={styles.label} htmlFor="doesNotHaveTheWord">
-            含まないキーワード (Doesn't have)
-          </label>
-          <input
-            id="doesNotHaveTheWord"
-            type="text"
-            style={styles.input}
-            value={doesNotHaveTheWord}
-            onChange={(e) => setDoesNotHaveTheWord(e.target.value)}
-            placeholder="例: urgent"
-          />
-        </div>
-      </div>
+            <TextField
+              label="含まないキーワード (Doesn't have)"
+              value={doesNotHaveTheWord}
+              onChange={(e) => setDoesNotHaveTheWord(e.target.value)}
+              placeholder="例: urgent"
+              size="small"
+              fullWidth
+            />
+          </Stack>
+        </Box>
 
-      <div style={styles.section}>
-        <div style={styles.sectionTitle}>アクション (Action)</div>
+        <Divider />
 
-        <div style={styles.field}>
-          <label style={styles.label} htmlFor="label">
-            ラベルを付ける
-          </label>
-          <select
-            id="label"
-            style={styles.select}
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
+        {/* アクションセクション */}
+        <Box>
+          <Typography variant="subtitle2" color="primary" gutterBottom sx={{ pb: 1, borderBottom: 1, borderColor: 'divider' }}>
+            アクション (Action)
+          </Typography>
+
+          <Stack spacing={2} sx={{ mt: 2 }}>
+            <FormControl size="small" fullWidth>
+              <InputLabel id="label-select-label">ラベルを付ける</InputLabel>
+              <Select
+                labelId="label-select-label"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                label="ラベルを付ける"
+              >
+                <MenuItem value="">ラベルなし</MenuItem>
+                {userLabels.map((l) => (
+                  <MenuItem key={l.id} value={l.name}>
+                    {l.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={shouldArchive}
+                  onChange={(e) => setShouldArchive(e.target.checked)}
+                />
+              }
+              label="受信トレイをスキップ（アーカイブ）"
+            />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={shouldMarkAsRead}
+                  onChange={(e) => setShouldMarkAsRead(e.target.checked)}
+                />
+              }
+              label="既読にする"
+            />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={shouldNeverSpam}
+                  onChange={(e) => setShouldNeverSpam(e.target.checked)}
+                />
+              }
+              label="迷惑メールにしない"
+            />
+          </Stack>
+        </Box>
+
+        {/* 既存メールへの適用オプション */}
+        {label && (
+          <Box sx={{ bgcolor: 'action.hover', p: 2, borderRadius: 1 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={applyToExisting}
+                  onChange={(e) => setApplyToExisting(e.target.checked)}
+                  color="warning"
+                />
+              }
+              label="既存の一致するメールにもラベルを付与する"
+            />
+            {applyToExisting && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
+                ※ 条件に一致する既存メール（最大1000件）にラベルを適用します
+              </Typography>
+            )}
+          </Box>
+        )}
+
+        {/* ボタン */}
+        <Stack direction="row" spacing={2} justifyContent="flex-end">
+          <Button
+            variant="outlined"
+            onClick={onCancel}
+            disabled={loading}
           >
-            <option value="">ラベルなし</option>
-            {userLabels.map((l) => (
-              <option key={l.id} value={l.name}>
-                {l.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div style={styles.checkboxRow}>
-          <input
-            type="checkbox"
-            id="shouldArchive"
-            style={styles.checkbox}
-            checked={shouldArchive}
-            onChange={(e) => setShouldArchive(e.target.checked)}
-          />
-          <label htmlFor="shouldArchive" style={styles.checkboxLabel}>
-            受信トレイをスキップ（アーカイブ）
-          </label>
-        </div>
-
-        <div style={styles.checkboxRow}>
-          <input
-            type="checkbox"
-            id="shouldMarkAsRead"
-            style={styles.checkbox}
-            checked={shouldMarkAsRead}
-            onChange={(e) => setShouldMarkAsRead(e.target.checked)}
-          />
-          <label htmlFor="shouldMarkAsRead" style={styles.checkboxLabel}>
-            既読にする
-          </label>
-        </div>
-
-        <div style={styles.checkboxRow}>
-          <input
-            type="checkbox"
-            id="shouldNeverSpam"
-            style={styles.checkbox}
-            checked={shouldNeverSpam}
-            onChange={(e) => setShouldNeverSpam(e.target.checked)}
-          />
-          <label htmlFor="shouldNeverSpam" style={styles.checkboxLabel}>
-            迷惑メールにしない
-          </label>
-        </div>
-      </div>
-
-      <div style={styles.buttons}>
-        <button
-          type="button"
-          style={styles.button('secondary')}
-          onClick={onCancel}
-          disabled={loading}
-        >
-          キャンセル
-        </button>
-        <button
-          type="submit"
-          style={{
-            ...styles.button('primary'),
-            ...(loading ? styles.buttonDisabled : {}),
-          }}
-          disabled={loading}
-        >
-          {loading ? '保存中...' : '保存'}
-        </button>
-      </div>
-    </form>
+            キャンセル
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : undefined}
+          >
+            {loading ? '保存中...' : '保存'}
+          </Button>
+        </Stack>
+      </Stack>
+    </Box>
   )
 }

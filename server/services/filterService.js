@@ -341,3 +341,131 @@ function deleteFilter(filterId) {
 
   return saveFiltersToSpreadsheet(newFilters)
 }
+
+/**
+ * フィルタ条件から Gmail 検索クエリを構築
+ * @param {Object} criteria - フィルタ条件
+ * @returns {string} Gmail 検索クエリ
+ */
+function buildSearchQuery(criteria) {
+  const parts = []
+
+  if (criteria.from) {
+    parts.push(`from:(${criteria.from})`)
+  }
+  if (criteria.to) {
+    parts.push(`to:(${criteria.to})`)
+  }
+  if (criteria.subject) {
+    parts.push(`subject:(${criteria.subject})`)
+  }
+  if (criteria.hasTheWord) {
+    parts.push(`(${criteria.hasTheWord})`)
+  }
+  if (criteria.doesNotHaveTheWord) {
+    parts.push(`-(${criteria.doesNotHaveTheWord})`)
+  }
+
+  return parts.join(' ')
+}
+
+// 既存メール適用の定数
+const MAX_MESSAGES_PER_PAGE = 500
+const MAX_MESSAGES_TO_PROCESS = 1000
+const BATCH_MODIFY_SIZE = 100
+
+/**
+ * 既存の一致するメールにフィルタアクションを適用
+ * @param {Object} filter - フィルタ (criteria と action を含む)
+ * @returns {Object} 適用結果 { success, count, errors }
+ */
+function applyFilterToExistingMessages(filter) {
+  const query = buildSearchQuery(filter.criteria)
+
+  if (!query) {
+    return { success: false, count: 0, error: 'No search criteria specified' }
+  }
+
+  // ラベルが指定されていない場合は何もしない
+  if (!filter.action.label) {
+    return { success: true, count: 0, message: 'No label to apply' }
+  }
+
+  // ラベルを取得または作成
+  const label = getOrCreateLabel(filter.action.label)
+
+  // 一致するメッセージを検索
+  const messages = []
+  let pageToken = null
+
+  try {
+    do {
+      const response = Gmail.Users.Messages.list('me', {
+        q: query,
+        maxResults: MAX_MESSAGES_PER_PAGE,
+        pageToken: pageToken
+      })
+
+      if (response.messages) {
+        messages.push(...response.messages)
+      }
+
+      pageToken = response.nextPageToken
+    } while (pageToken && messages.length < MAX_MESSAGES_TO_PROCESS)
+  } catch (e) {
+    return { success: false, count: 0, error: `Search failed: ${e.message}` }
+  }
+
+  if (messages.length === 0) {
+    return { success: true, count: 0, message: 'No matching messages found' }
+  }
+
+  // メッセージにラベルを適用
+  let appliedCount = 0
+  const errors = []
+
+  // バッチ処理用のリクエストを構築
+  const addLabelIds = [label.id]
+  const removeLabelIds = []
+
+  if (filter.action.shouldArchive) {
+    removeLabelIds.push('INBOX')
+  }
+  if (filter.action.shouldMarkAsRead) {
+    removeLabelIds.push('UNREAD')
+  }
+
+  // バッチ修正
+  for (let i = 0; i < messages.length; i += BATCH_MODIFY_SIZE) {
+    const batch = messages.slice(i, i + BATCH_MODIFY_SIZE)
+    const messageIds = batch.map((m) => m.id)
+
+    try {
+      Gmail.Users.Messages.batchModify(
+        {
+          ids: messageIds,
+          addLabelIds: addLabelIds,
+          removeLabelIds: removeLabelIds.length > 0 ? removeLabelIds : undefined
+        },
+        'me'
+      )
+
+      appliedCount += batch.length
+    } catch (e) {
+      errors.push(`Batch ${Math.floor(i / BATCH_MODIFY_SIZE) + 1} failed: ${e.message}`)
+    }
+  }
+
+  addHistory(
+    'APPLY_TO_EXISTING',
+    filter.action.label,
+    `Applied to ${appliedCount}/${messages.length} messages`
+  )
+
+  return {
+    success: errors.length === 0,
+    count: appliedCount,
+    total: messages.length,
+    errors: errors
+  }
+}

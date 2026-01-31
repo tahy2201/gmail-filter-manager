@@ -1,97 +1,20 @@
 import { useState } from 'react'
+import {
+  Alert,
+  Box,
+  Button,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material'
+import { Search as SearchIcon } from '@mui/icons-material'
 import { gasApi } from '../services/gas'
 import type { EmailPreview } from '../types'
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '16px',
-  },
-  inputGroup: {
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'center',
-  },
-  input: {
-    flex: 1,
-    padding: '12px 16px',
-    border: '1px solid #dadce0',
-    borderRadius: '4px',
-    fontSize: '14px',
-    fontFamily: 'monospace',
-  },
-  button: {
-    padding: '12px 24px',
-    fontSize: '14px',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    backgroundColor: '#1a73e8',
-    color: '#fff',
-    fontWeight: 'bold' as const,
-  },
-  buttonDisabled: {
-    backgroundColor: '#dadce0',
-    cursor: 'not-allowed',
-  },
-  results: {
-    border: '1px solid #dadce0',
-    borderRadius: '8px',
-    overflow: 'hidden',
-  },
-  resultHeader: {
-    padding: '12px 16px',
-    backgroundColor: '#f1f3f4',
-    fontWeight: 'bold' as const,
-    fontSize: '14px',
-    color: '#3c4043',
-  },
-  emailItem: {
-    padding: '12px 16px',
-    borderBottom: '1px solid #e0e0e0',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-  },
-  emailSubject: {
-    fontSize: '14px',
-    fontWeight: 'bold' as const,
-    color: '#202124',
-    marginBottom: '4px',
-  },
-  emailMeta: {
-    fontSize: '12px',
-    color: '#5f6368',
-    marginBottom: '4px',
-  },
-  emailSnippet: {
-    fontSize: '12px',
-    color: '#5f6368',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
-  },
-  empty: {
-    padding: '24px',
-    textAlign: 'center' as const,
-    color: '#5f6368',
-  },
-  error: {
-    padding: '16px',
-    backgroundColor: '#fce8e6',
-    color: '#c5221f',
-    borderRadius: '4px',
-  },
-  unfilteredSection: {
-    marginTop: '24px',
-  },
-  sectionTitle: {
-    fontSize: '16px',
-    fontWeight: 'bold' as const,
-    color: '#1a73e8',
-    marginBottom: '12px',
-  },
-}
 
 export function QueryTester() {
   const [query, setQuery] = useState('')
@@ -134,92 +57,136 @@ export function QueryTester() {
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.inputGroup}>
-        <input
-          type="text"
-          placeholder="Gmailの検索クエリを入力（例: from:example.com subject:請求書）"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          style={styles.input}
-        />
-        <button
-          type="button"
-          onClick={handleSearch}
-          disabled={loading || !query.trim()}
-          style={{
-            ...styles.button,
-            ...(loading || !query.trim() ? styles.buttonDisabled : {}),
-          }}
-        >
-          {loading ? '検索中...' : '検索'}
-        </button>
-      </div>
+    <Stack spacing={3}>
+      {/* 検索フォーム */}
+      <Paper sx={{ p: 2 }}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <TextField
+            fullWidth
+            placeholder="Gmailの検索クエリを入力（例: from:example.com subject:請求書）"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            size="small"
+            sx={{ fontFamily: 'monospace' }}
+          />
+          <Button
+            variant="contained"
+            onClick={handleSearch}
+            disabled={loading || !query.trim()}
+            startIcon={<SearchIcon />}
+          >
+            {loading ? '検索中...' : '検索'}
+          </Button>
+        </Stack>
+      </Paper>
 
-      {error && <div style={styles.error}>{error}</div>}
+      {error && <Alert severity="error">{error}</Alert>}
 
+      {/* 検索結果 */}
       {results !== null && (
-        <div style={styles.results}>
-          <div style={styles.resultHeader}>{results.length} 件の結果</div>
+        <Paper sx={{ overflow: 'hidden' }}>
+          <Box sx={{ p: 2, bgcolor: 'grey.100' }}>
+            <Typography variant="subtitle2">
+              {results.length} 件の結果
+            </Typography>
+          </Box>
           {results.length === 0 ? (
-            <div style={styles.empty}>このクエリに一致するメールはありません</div>
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+              <Typography color="text.secondary">
+                このクエリに一致するメールはありません
+              </Typography>
+            </Box>
           ) : (
-            results.map((email) => (
-              <div key={email.id} style={styles.emailItem}>
-                <div style={styles.emailSubject}>
-                  {email.subject || '(件名なし)'}
-                </div>
-                <div style={styles.emailMeta}>
-                  {email.from} - {email.date}
-                </div>
-                <div style={styles.emailSnippet}>{email.snippet}</div>
-              </div>
-            ))
+            <List disablePadding>
+              {results.map((email, idx) => (
+                <ListItem
+                  key={email.id}
+                  divider={idx < results.length - 1}
+                  sx={{ '&:hover': { bgcolor: 'action.hover' } }}
+                >
+                  <ListItemText
+                    primary={email.subject || '(件名なし)'}
+                    secondary={
+                      <>
+                        <Typography component="span" variant="body2" color="text.secondary">
+                          {email.from} - {email.date}
+                        </Typography>
+                        <br />
+                        <Typography component="span" variant="body2" color="text.secondary" noWrap>
+                          {email.snippet}
+                        </Typography>
+                      </>
+                    }
+                    primaryTypographyProps={{ fontWeight: 'bold' }}
+                  />
+                </ListItem>
+              ))}
+            </List>
           )}
-        </div>
+        </Paper>
       )}
 
-      <div style={styles.unfilteredSection}>
-        <div style={styles.sectionTitle}>フィルタ外のメール</div>
-        <button
-          type="button"
+      <Divider />
+
+      {/* フィルタ外メール */}
+      <Box>
+        <Typography variant="h6" color="primary" gutterBottom>
+          フィルタ外のメール
+        </Typography>
+        <Button
+          variant="contained"
+          color="success"
           onClick={handleGetUnfiltered}
           disabled={loadingUnfiltered}
-          style={{
-            ...styles.button,
-            backgroundColor: '#34a853',
-            ...(loadingUnfiltered ? styles.buttonDisabled : {}),
-          }}
+          startIcon={<SearchIcon />}
         >
           {loadingUnfiltered ? '読み込み中...' : 'フィルタ外メールを検索'}
-        </button>
+        </Button>
 
         {unfilteredEmails !== null && (
-          <div style={{ ...styles.results, marginTop: '12px' }}>
-            <div style={styles.resultHeader}>
-              {unfilteredEmails.length} 件のフィルタ外メール
-            </div>
+          <Paper sx={{ mt: 2, overflow: 'hidden' }}>
+            <Box sx={{ p: 2, bgcolor: 'grey.100' }}>
+              <Typography variant="subtitle2">
+                {unfilteredEmails.length} 件のフィルタ外メール
+              </Typography>
+            </Box>
             {unfilteredEmails.length === 0 ? (
-              <div style={styles.empty}>
-                最近のメールはすべていずれかのフィルタに一致しています
-              </div>
+              <Box sx={{ p: 3, textAlign: 'center' }}>
+                <Typography color="text.secondary">
+                  最近のメールはすべていずれかのフィルタに一致しています
+                </Typography>
+              </Box>
             ) : (
-              unfilteredEmails.map((email) => (
-                <div key={email.id} style={styles.emailItem}>
-                  <div style={styles.emailSubject}>
-                    {email.subject || '(件名なし)'}
-                  </div>
-                  <div style={styles.emailMeta}>
-                    {email.from} - {email.date}
-                  </div>
-                  <div style={styles.emailSnippet}>{email.snippet}</div>
-                </div>
-              ))
+              <List disablePadding>
+                {unfilteredEmails.map((email, idx) => (
+                  <ListItem
+                    key={email.id}
+                    divider={idx < unfilteredEmails.length - 1}
+                    sx={{ '&:hover': { bgcolor: 'action.hover' } }}
+                  >
+                    <ListItemText
+                      primary={email.subject || '(件名なし)'}
+                      secondary={
+                        <>
+                          <Typography component="span" variant="body2" color="text.secondary">
+                            {email.from} - {email.date}
+                          </Typography>
+                          <br />
+                          <Typography component="span" variant="body2" color="text.secondary" noWrap>
+                            {email.snippet}
+                          </Typography>
+                        </>
+                      }
+                      primaryTypographyProps={{ fontWeight: 'bold' }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
             )}
-          </div>
+          </Paper>
         )}
-      </div>
-    </div>
+      </Box>
+    </Stack>
   )
 }

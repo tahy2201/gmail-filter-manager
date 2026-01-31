@@ -15,8 +15,8 @@ gmail-filter-manager/
 ├── .clasp.json              # scriptId設定済み、rootDir: server
 ├── client/                  # React アプリ
 │   ├── src/
-│   │   ├── components/      # FilterList, FilterCard, QueryTester, DeleteRuleManager, FilterSync
-│   │   ├── hooks/           # useFilters, useLabels, useDeleteRules, useSyncFilters
+│   │   ├── components/      # RuleManager, QueryTester, FilterEditForm, ConfirmDialog, Modal
+│   │   ├── hooks/           # useFilters, useLabels, useDeleteRules, useLabelGroups
 │   │   ├── services/gas.ts  # google.script.run ラッパー
 │   │   └── types/index.ts   # 型定義
 │   └── vite.config.ts
@@ -55,8 +55,9 @@ gmail-filter-manager/
 - ✅ 削除ルール管理（追加/削除/有効無効/即時実行）
 - ✅ XMLインポート（GASエディタから `importMyFilters()` 実行）
 - ✅ スプレッドシートへのデータ保存
-- ✅ Gmail差分同期（Sync to Gmailタブで差分プレビュー・適用）
+- ✅ 自動Gmail同期（フィルタ保存時に自動でGmailフィルタに反映）
 - ✅ フィルタ編集UI（WebUIからフィルタを追加・編集・削除）
+- ✅ 既存メールへのフィルタ適用（条件に一致する既存メールにラベル付与）
 
 ## 未実装機能
 - ❌ 日次トリガー設定UI（`setupDailyDeleteTrigger()` 関数はあるがUI未連携）

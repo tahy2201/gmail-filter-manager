@@ -251,3 +251,17 @@ function applyFilterDiff(dryRun) {
     throw new Error(`Failed to apply filter diff: ${error.message}`)
   }
 }
+
+/**
+ * 既存の一致するメールにフィルタを適用
+ * @param {Object} filter - フィルタ (criteria と action を含む)
+ * @returns {Object} 適用結果
+ */
+function applyToExistingMessages(filter) {
+  try {
+    return applyFilterToExistingMessages(filter)
+  } catch (error) {
+    console.error('Error applying filter to existing messages:', error)
+    throw new Error(`Failed to apply filter to existing messages: ${error.message}`)
+  }
+}
