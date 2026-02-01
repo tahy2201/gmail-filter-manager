@@ -72,10 +72,10 @@ export function HistoryPanel() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {history.map((entry, idx) => {
+              {history.map((entry) => {
                 const { label, color } = getActionLabel(entry.action)
                 return (
-                  <TableRow key={idx} hover>
+                  <TableRow key={`${entry.timestamp}-${entry.action}-${entry.target}`} hover>
                     <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
                       {formatTimestamp(entry.timestamp)}
                     </TableCell>
