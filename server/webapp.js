@@ -1,12 +1,3 @@
-/**
- * Gmail Filter Manager - Web アプリケーション エントリーポイント
- */
-
-/**
- * Web アプリの GET リクエストハンドラ
- * @param {Object} e - イベントオブジェクト
- * @returns {HtmlOutput} HTML 出力
- */
 function doGet(e) {
   try {
     const template = HtmlService.createTemplateFromFile('index')
@@ -24,10 +15,6 @@ function doGet(e) {
   }
 }
 
-/**
- * フィルタ一覧を取得
- * @returns {Array} フィルタ一覧
- */
 function getFilters() {
   try {
     return getFiltersFromSpreadsheet()
@@ -37,11 +24,6 @@ function getFilters() {
   }
 }
 
-/**
- * フィルタを保存
- * @param {Array} filters - フィルタ一覧
- * @returns {Object} 保存結果
- */
 function saveFilters(filters) {
   try {
     return saveFiltersToSpreadsheet(filters)
@@ -51,11 +33,6 @@ function saveFilters(filters) {
   }
 }
 
-/**
- * XML からフィルタをインポート
- * @param {string} xml - XML 文字列
- * @returns {Object} インポート結果
- */
 function importFiltersXml(xml) {
   try {
     return importFiltersFromXml(xml)
@@ -65,10 +42,6 @@ function importFiltersXml(xml) {
   }
 }
 
-/**
- * Gmail にフィルタを適用
- * @returns {Object} 適用結果
- */
 function applyFiltersToGmail() {
   try {
     return applyFilters()
@@ -78,12 +51,6 @@ function applyFiltersToGmail() {
   }
 }
 
-/**
- * メール検索
- * @param {string} query - 検索クエリ
- * @param {number} max - 最大件数
- * @returns {Array} メール一覧
- */
 function searchEmails(query, max) {
   try {
     return searchGmailEmails(query, max || 50)
@@ -93,10 +60,6 @@ function searchEmails(query, max) {
   }
 }
 
-/**
- * ラベル一覧を取得
- * @returns {Array} ラベル一覧
- */
 function getLabels() {
   try {
     return listGmailLabels()
@@ -106,10 +69,6 @@ function getLabels() {
   }
 }
 
-/**
- * 削除ルール一覧を取得
- * @returns {Array} 削除ルール一覧
- */
 function getDeleteRules() {
   try {
     return getDeleteRulesFromStorage()
@@ -119,11 +78,6 @@ function getDeleteRules() {
   }
 }
 
-/**
- * 削除ルールを保存
- * @param {Array} rules - 削除ルール一覧
- * @returns {Object} 保存結果
- */
 function saveDeleteRules(rules) {
   try {
     return saveDeleteRulesToStorage(rules)
@@ -133,12 +87,6 @@ function saveDeleteRules(rules) {
   }
 }
 
-/**
- * 削除ルールを実行
- * @param {string} labelName - ラベル名
- * @param {number} days - 日数
- * @returns {Object} 実行結果
- */
 function executeDeleteRule(labelName, days) {
   try {
     return executeDeleteByLabel(labelName, days)
@@ -148,10 +96,6 @@ function executeDeleteRule(labelName, days) {
   }
 }
 
-/**
- * 現在のユーザー情報を取得
- * @returns {Object} ユーザー情報
- */
 function getCurrentUser() {
   try {
     return {
@@ -163,11 +107,6 @@ function getCurrentUser() {
   }
 }
 
-/**
- * フィルタ外メールを取得
- * @param {number} max - 最大件数
- * @returns {Array} メール一覧
- */
 function getUnfilteredEmails(max) {
   try {
     return findUnfilteredEmails(max || 50)
@@ -177,10 +116,6 @@ function getUnfilteredEmails(max) {
   }
 }
 
-/**
- * スプレッドシートの URL を取得
- * @returns {Object} スプレッドシート情報
- */
 function getDataSpreadsheetUrl() {
   try {
     return {
@@ -192,9 +127,6 @@ function getDataSpreadsheetUrl() {
   }
 }
 
-/**
- * スケジュールされた削除ルールを実行（トリガー用）
- */
 function runScheduledDeleteRules() {
   try {
     const results = executeAllDeleteRules()
@@ -213,9 +145,6 @@ function runScheduledDeleteRules() {
   }
 }
 
-/**
- * 初期セットアップ（スプレッドシート作成）
- */
 function setup() {
   const ss = getOrCreateSpreadsheet()
   console.log('Spreadsheet created/initialized: ' + ss.getUrl())
@@ -225,10 +154,6 @@ function setup() {
   }
 }
 
-/**
- * フィルタ差分のプレビューを取得
- * @returns {Object} 差分プレビュー
- */
 function previewFilterDiff() {
   try {
     return previewFiltersDiff()
@@ -238,11 +163,6 @@ function previewFilterDiff() {
   }
 }
 
-/**
- * フィルタ差分を適用
- * @param {boolean} dryRun - true の場合は実際には適用しない
- * @returns {Object} 適用結果
- */
 function applyFilterDiff(dryRun) {
   try {
     return applyFiltersDiff(dryRun === true)
@@ -252,16 +172,47 @@ function applyFilterDiff(dryRun) {
   }
 }
 
-/**
- * 既存の一致するメールにフィルタを適用
- * @param {Object} filter - フィルタ (criteria と action を含む)
- * @returns {Object} 適用結果
- */
 function applyToExistingMessages(filter) {
   try {
     return applyFilterToExistingMessages(filter)
   } catch (error) {
     console.error('Error applying filter to existing messages:', error)
     throw new Error(`Failed to apply filter to existing messages: ${error.message}`)
+  }
+}
+
+function getTriggerStatus() {
+  try {
+    return getDeleteTriggerStatus()
+  } catch (error) {
+    console.error('Error getting trigger status:', error)
+    throw new Error(`Failed to get trigger status: ${error.message}`)
+  }
+}
+
+function setupDeleteTrigger(hour) {
+  try {
+    return setupDailyDeleteTrigger(hour)
+  } catch (error) {
+    console.error('Error setting up delete trigger:', error)
+    throw new Error(`Failed to setup delete trigger: ${error.message}`)
+  }
+}
+
+function removeDeleteTrigger() {
+  try {
+    return removeDailyDeleteTrigger()
+  } catch (error) {
+    console.error('Error removing delete trigger:', error)
+    throw new Error(`Failed to remove delete trigger: ${error.message}`)
+  }
+}
+
+function getDeleteHistory(limit) {
+  try {
+    return getHistory(limit || 50)
+  } catch (error) {
+    console.error('Error getting delete history:', error)
+    throw new Error(`Failed to get delete history: ${error.message}`)
   }
 }

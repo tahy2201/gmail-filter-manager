@@ -1,37 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Paper,
-  Popover,
-  Stack,
-  Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Tooltip,
-  Typography,
+  Box, Button, Chip, IconButton, Paper, Popover, Stack, Switch,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography,
 } from '@mui/material'
 import {
-  Add as AddIcon,
-  Archive as ArchiveIcon,
-  Delete as DeleteIcon,
-  Drafts as DraftsIcon,
-  Edit as EditIcon,
-  ForwardToInbox as ForwardToInboxIcon,
-  PlayArrow as PlayArrowIcon,
-  StarBorder as StarBorderIcon,
-  VerifiedUser as VerifiedUserIcon,
+  Add as AddIcon, Archive as ArchiveIcon, Delete as DeleteIcon, Drafts as DraftsIcon,
+  Edit as EditIcon, ForwardToInbox as ForwardToInboxIcon, PlayArrow as PlayArrowIcon,
+  StarBorder as StarBorderIcon, VerifiedUser as VerifiedUserIcon,
 } from '@mui/icons-material'
 import type { DeleteRule, FilterEntry, LabelGroupData } from '../../types'
 
-// カラム幅の型定義
 interface ColumnWidths {
   label: number
   from: number
@@ -43,45 +21,26 @@ interface ColumnWidths {
   deleteRule: number
 }
 
-// デフォルトのカラム幅
-const defaultColumnWidths: ColumnWidths = {
-  label: 140,
-  from: 180,
-  subject: 150,
-  other: 180,
-  action: 90,
-  forward: 50,
-  operations: 80,
-  deleteRule: 80,
+const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
+  label: 140, from: 180, subject: 150, other: 180, action: 90, forward: 50, operations: 80, deleteRule: 80,
 }
 
-// localStorage キー
 const COLUMN_WIDTHS_STORAGE_KEY = 'gmail-filter-manager-column-widths'
 
-// localStorageからカラム幅を読み込み
 function loadColumnWidths(): ColumnWidths {
   try {
     const saved = localStorage.getItem(COLUMN_WIDTHS_STORAGE_KEY)
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      return { ...defaultColumnWidths, ...parsed }
-    }
-  } catch {
-    // パースエラーの場合はデフォルト値を使用
-  }
-  return defaultColumnWidths
+    if (saved) return { ...DEFAULT_COLUMN_WIDTHS, ...JSON.parse(saved) }
+  } catch {}
+  return DEFAULT_COLUMN_WIDTHS
 }
 
-// localStorageにカラム幅を保存
 function saveColumnWidths(widths: ColumnWidths): void {
   try {
     localStorage.setItem(COLUMN_WIDTHS_STORAGE_KEY, JSON.stringify(widths))
-  } catch {
-    // 保存エラーは無視
-  }
+  } catch {}
 }
 
-// リサイズ可能なヘッダーセル（リサイズハンドルはセル内に配置）
 interface ResizableHeaderCellProps {
   width: number
   onResize: (width: number) => void
@@ -125,23 +84,12 @@ function ResizableHeaderCell({ width, onResize, children, minWidth = 50 }: Resiz
   return (
     <TableCell
       sx={{
-        fontWeight: 'bold',
-        bgcolor: 'grey.100',
-        width,
-        minWidth: width,
-        maxWidth: width,
-        position: 'sticky',
-        top: 0,
-        zIndex: 2,
-        whiteSpace: 'nowrap',
-        textOverflow: 'ellipsis',
-        borderRight: '2px solid',
-        borderRightColor: 'divider',
-        pr: 2,
+        fontWeight: 'bold', bgcolor: 'grey.100', width, minWidth: width, maxWidth: width,
+        position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+        borderRight: '2px solid', borderRightColor: 'divider', pr: 2,
       }}
     >
       {children}
-      {/* リサイズハンドル */}
       <Box
         onMouseDown={handleMouseDown}
         sx={{
@@ -170,89 +118,51 @@ interface FilterTableProps {
   onExecuteDeleteRule?: (labelName: string, days: number) => Promise<number>
 }
 
-// パース処理（共通関数）
 function parseConditionItems(v: string): string[] {
-  // from:{email1 email2} 形式
-  const prefixBraceMatch = v.match(/^(\w+):\{(.+)\}$/)
-  if (prefixBraceMatch) {
-    return prefixBraceMatch[2].split(/\s+/).filter(Boolean)
-  }
-  // {email1 email2} 形式
+  const prefixMatch = v.match(/^(\w+):\{(.+)\}$/)
+  if (prefixMatch) return prefixMatch[2].split(/\s+/).filter(Boolean)
+
   const braceMatch = v.match(/^\{(.+)\}$/)
-  if (braceMatch) {
-    return braceMatch[1].split(/\s+/).filter(Boolean)
-  }
-  // OR区切り (|)
-  if (v.includes('|')) {
-    return v.split('|').map((s) => s.trim()).filter(Boolean)
-  }
+  if (braceMatch) return braceMatch[1].split(/\s+/).filter(Boolean)
+
+  if (v.includes('|')) return v.split('|').map((s) => s.trim()).filter(Boolean)
   return [v]
 }
 
-interface ActionIconsProps {
-  action: FilterEntry['action']
-}
+const ICON_SLOT_SX = { width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }
 
-function ActionIcons({ action }: ActionIconsProps) {
-  // 固定幅のアイコンスロットで縦位置を揃える
-  const iconSlotSx = { width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }
-
+function ActionIcons({ action }: { action: FilterEntry['action'] }) {
   return (
     <Box sx={{ display: 'flex', gap: 0.25 }}>
-      <Box sx={iconSlotSx}>
+      <Box sx={ICON_SLOT_SX}>
         {action.shouldMarkAsRead && (
-          <Tooltip title="既読にする">
-            <DraftsIcon fontSize="small" sx={{ color: 'primary.main' }} />
-          </Tooltip>
+          <Tooltip title="既読にする"><DraftsIcon fontSize="small" sx={{ color: 'primary.main' }} /></Tooltip>
         )}
       </Box>
-      <Box sx={iconSlotSx}>
+      <Box sx={ICON_SLOT_SX}>
         {action.shouldNeverSpam && (
-          <Tooltip title="迷惑メールにしない">
-            <VerifiedUserIcon fontSize="small" sx={{ color: 'success.main' }} />
-          </Tooltip>
+          <Tooltip title="迷惑メールにしない"><VerifiedUserIcon fontSize="small" sx={{ color: 'success.main' }} /></Tooltip>
         )}
       </Box>
-      <Box sx={iconSlotSx}>
+      <Box sx={ICON_SLOT_SX}>
         {action.shouldArchive && (
-          <Tooltip title="アーカイブ">
-            <ArchiveIcon fontSize="small" sx={{ color: 'info.main' }} />
-          </Tooltip>
+          <Tooltip title="アーカイブ"><ArchiveIcon fontSize="small" sx={{ color: 'info.main' }} /></Tooltip>
         )}
       </Box>
-      <Box sx={iconSlotSx}>
+      <Box sx={ICON_SLOT_SX}>
         {action.shouldNeverMarkAsImportant && (
-          <Tooltip title="重要にしない">
-            <StarBorderIcon fontSize="small" sx={{ color: 'warning.main' }} />
-          </Tooltip>
+          <Tooltip title="重要にしない"><StarBorderIcon fontSize="small" sx={{ color: 'warning.main' }} /></Tooltip>
         )}
       </Box>
     </Box>
   )
 }
 
-interface ConditionItemDisplayProps {
-  label: string
-  value: string
-  color: string
-}
-
-function ConditionItemDisplay({ label, value, color }: ConditionItemDisplayProps) {
+function ConditionItemDisplay({ label, value, color }: { label: string; value: string; color: string }) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const items = parseConditionItems(value)
-  const isMultiple = items.length > 1
 
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    if (isMultiple) {
-      setAnchorEl(event.currentTarget)
-    }
-  }
-
-  const handleClose = () => {
-    setAnchorEl(null)
-  }
-
-  if (!isMultiple) {
+  if (items.length <= 1) {
     return (
       <Typography variant="caption" sx={{ color }}>
         {label}: {value.length > 25 ? `${value.slice(0, 25)}...` : value}
@@ -265,35 +175,14 @@ function ConditionItemDisplay({ label, value, color }: ConditionItemDisplayProps
       <Chip
         label={`${label}: ${items.length}件`}
         size="small"
-        onClick={handleClick}
-        sx={{
-          cursor: 'pointer',
-          height: 20,
-          fontSize: '0.7rem',
-          bgcolor: `${color}15`,
-          color: color,
-          '& .MuiChip-label': { px: 1 },
-        }}
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+        sx={{ cursor: 'pointer', height: 20, fontSize: '0.7rem', bgcolor: `${color}15`, color, '& .MuiChip-label': { px: 1 } }}
       />
-      <Popover
-        open={Boolean(anchorEl)}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-      >
+      <Popover open={Boolean(anchorEl)} anchorEl={anchorEl} onClose={() => setAnchorEl(null)} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}>
         <Box sx={{ p: 1.5, maxWidth: 350 }}>
-          <Typography variant="caption" sx={{ color, fontWeight: 'bold', mb: 1, display: 'block' }}>
-            {label}
-          </Typography>
+          <Typography variant="caption" sx={{ color, fontWeight: 'bold', mb: 1, display: 'block' }}>{label}</Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {items.map((item) => (
-              <Chip
-                key={item}
-                label={item}
-                size="small"
-                sx={{ fontSize: '0.7rem' }}
-              />
-            ))}
+            {items.map((item) => <Chip key={item} label={item} size="small" sx={{ fontSize: '0.7rem' }} />)}
           </Box>
         </Box>
       </Popover>
@@ -311,48 +200,39 @@ interface DeleteRuleCellProps {
 
 function DeleteRuleCell({ deleteRule, rowSpan, labelName, onUpdateDeleteRule, onExecuteDeleteRule }: DeleteRuleCellProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
-  const [editDays, setEditDays] = useState(deleteRule?.delayDays ?? 30)
+  const [editDaysStr, setEditDaysStr] = useState(String(deleteRule?.delayDays ?? 30))
   const [executing, setExecuting] = useState(false)
-  const [resultMessage, setResultMessage] = useState<string | null>(null)
 
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    setEditDays(deleteRule?.delayDays ?? 30)
-    setAnchorEl(event.currentTarget)
+  function handleClick(e: React.MouseEvent<HTMLElement>) {
+    setEditDaysStr(String(deleteRule?.delayDays ?? 30))
+    setAnchorEl(e.currentTarget)
   }
 
-  const handleClose = () => {
-    setAnchorEl(null)
-    setResultMessage(null)
-  }
+  function handleClose() { setAnchorEl(null) }
 
-  const handleToggle = () => {
+  function handleToggle() {
     if (!deleteRule || !onUpdateDeleteRule) return
     onUpdateDeleteRule(labelName, { ...deleteRule, enabled: !deleteRule.enabled })
   }
 
-  const handleSave = () => {
+  function handleSave() {
     if (!onUpdateDeleteRule) return
-    onUpdateDeleteRule(labelName, {
-      labelName,
-      delayDays: editDays,
-      enabled: deleteRule?.enabled ?? true,
-    })
+    onUpdateDeleteRule(labelName, { labelName, delayDays: Number(editDaysStr) || 1, enabled: deleteRule?.enabled ?? true })
     handleClose()
   }
 
-  const handleRemove = () => {
+  function handleRemove() {
     if (!onUpdateDeleteRule) return
     onUpdateDeleteRule(labelName, null)
     handleClose()
   }
 
-  const handleExecute = async () => {
+  async function handleExecute() {
     if (!deleteRule || !onExecuteDeleteRule || executing) return
     setExecuting(true)
-    setResultMessage(null)
+    handleClose()
     try {
-      const count = await onExecuteDeleteRule(labelName, deleteRule.delayDays)
-      setResultMessage(`${count}件削除しました`)
+      await onExecuteDeleteRule(labelName, deleteRule.delayDays)
     } finally {
       setExecuting(false)
     }
@@ -405,8 +285,8 @@ function DeleteRuleCell({ deleteRule, rowSpan, labelName, onUpdateDeleteRule, on
               <TextField
                 type="number"
                 size="small"
-                value={editDays}
-                onChange={(e) => setEditDays(Number(e.target.value))}
+                value={editDaysStr}
+                onChange={(e) => setEditDaysStr(e.target.value)}
                 inputProps={{ min: 1 }}
                 sx={{ width: 80 }}
               />
@@ -444,7 +324,7 @@ function DeleteRuleCell({ deleteRule, rowSpan, labelName, onUpdateDeleteRule, on
                     disabled={executing || !deleteRule.enabled}
                     startIcon={<PlayArrowIcon />}
                   >
-                    {executing ? '実行中...' : '実行'}
+                    実行
                   </Button>
                   <Button
                     variant="outlined"
@@ -457,12 +337,6 @@ function DeleteRuleCell({ deleteRule, rowSpan, labelName, onUpdateDeleteRule, on
                 </>
               )}
             </Stack>
-
-            {resultMessage && (
-              <Typography variant="caption" color="success.main">
-                {resultMessage}
-              </Typography>
-            )}
           </Stack>
         </Box>
       </Popover>
@@ -477,19 +351,18 @@ export function FilterTable({
   onUpdateDeleteRule,
   onExecuteDeleteRule,
 }: FilterTableProps) {
-  // カラム幅のstate（localStorageから初期化）
   const [columnWidths, setColumnWidths] = useState<ColumnWidths>(loadColumnWidths)
 
-  // カラム幅変更時にlocalStorageに保存
-  const handleResize = (column: keyof ColumnWidths) => (width: number) => {
-    setColumnWidths((prev) => {
-      const newWidths = { ...prev, [column]: width }
-      saveColumnWidths(newWidths)
-      return newWidths
-    })
+  function handleResize(column: keyof ColumnWidths) {
+    return (width: number) => {
+      setColumnWidths((prev) => {
+        const newWidths = { ...prev, [column]: width }
+        saveColumnWidths(newWidths)
+        return newWidths
+      })
+    }
   }
 
-  // フラットな行データを作成
   const rows: Array<{
     filter: FilterEntry
     labelName: string
@@ -499,20 +372,16 @@ export function FilterTable({
   }> = []
 
   for (const group of labelGroups) {
-    const groupRowSpan = group.filters.length || 1
-
-    if (group.filters.length === 0) {
-      continue
-    }
+    if (group.filters.length === 0) continue
+    const rowSpan = group.filters.length
 
     for (let i = 0; i < group.filters.length; i++) {
-      const filter = group.filters[i]
       rows.push({
-        filter,
+        filter: group.filters[i],
         labelName: group.labelName,
         deleteRule: group.deleteRule,
         isFirstInGroup: i === 0,
-        rowSpan: groupRowSpan,
+        rowSpan,
       })
     }
   }
@@ -557,7 +426,6 @@ export function FilterTable({
               hover
               sx={{ '&:hover': { bgcolor: 'action.hover' } }}
             >
-              {/* ラベル（rowSpan） */}
               {row.isFirstInGroup && (
                 <TableCell
                   rowSpan={row.rowSpan}
@@ -579,7 +447,6 @@ export function FilterTable({
                 </TableCell>
               )}
 
-              {/* From */}
               <TableCell sx={{
                 fontSize: '0.8rem',
                 width: columnWidths.from,
@@ -601,7 +468,6 @@ export function FilterTable({
                 )}
               </TableCell>
 
-              {/* Subject */}
               <TableCell sx={{
                 fontSize: '0.8rem',
                 width: columnWidths.subject,
@@ -632,7 +498,6 @@ export function FilterTable({
                 )}
               </TableCell>
 
-              {/* その他（hasTheWord, doesNotHaveTheWord, to） */}
               <TableCell sx={{
                 fontSize: '0.8rem',
                 width: columnWidths.other,
@@ -669,7 +534,6 @@ export function FilterTable({
                 )}
               </TableCell>
 
-              {/* アクションアイコン */}
               <TableCell sx={{
                 textAlign: 'center',
                 width: columnWidths.action,
@@ -679,7 +543,6 @@ export function FilterTable({
                 <ActionIcons action={row.filter.action} />
               </TableCell>
 
-              {/* 転送 */}
               <TableCell sx={{ fontSize: '0.8rem' }}>
                 {row.filter.action.forwardTo ? (
                   <Tooltip title={row.filter.action.forwardTo}>
@@ -690,7 +553,6 @@ export function FilterTable({
                 )}
               </TableCell>
 
-              {/* 操作ボタン */}
               <TableCell sx={{ textAlign: 'center' }}>
                 <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
                   {onEditFilter && (
@@ -718,7 +580,6 @@ export function FilterTable({
                 </Box>
               </TableCell>
 
-              {/* 削除ルール（rowSpan） */}
               {row.isFirstInGroup && (
                 <DeleteRuleCell
                   deleteRule={row.deleteRule}
