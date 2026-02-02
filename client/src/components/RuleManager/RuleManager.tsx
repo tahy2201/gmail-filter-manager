@@ -278,7 +278,7 @@ export function RuleManager() {
 
       <Snackbar
         open={!!snackbarMessage}
-        autoHideDuration={3000}
+        autoHideDuration={5000}
         onClose={() => setSnackbarMessage(null)}
         message={snackbarMessage}
       />

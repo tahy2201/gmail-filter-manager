@@ -124,9 +124,10 @@ function getDeleteTriggerStatus() {
   for (const trigger of triggers) {
     if (trigger.getHandlerFunction() === 'runScheduledDeleteRules') {
       const savedHour = PropertiesService.getScriptProperties().getProperty('DELETE_TRIGGER_HOUR')
+      const hour = savedHour ? Number(savedHour) : 3
       return {
         enabled: true,
-        hour: savedHour !== null ? Number(savedHour) : 3
+        hour: isNaN(hour) ? 3 : hour
       }
     }
   }

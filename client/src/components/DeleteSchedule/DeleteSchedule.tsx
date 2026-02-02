@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Box, CircularProgress, FormControl, MenuItem, Select, Switch, Tooltip } from '@mui/material'
 import { Schedule as ScheduleIcon } from '@mui/icons-material'
 import { useTrigger } from '../../hooks/useTrigger'
@@ -9,9 +9,11 @@ export function DeleteSchedule() {
   const { status, loading, saving, error, setupTrigger, removeTrigger } = useTrigger()
   const [selectedHour, setSelectedHour] = useState<number>(3)
 
-  if (status.hour !== null && status.hour !== selectedHour && !saving && !loading) {
-    setSelectedHour(status.hour)
-  }
+  useEffect(() => {
+    if (status.hour !== null && status.hour !== selectedHour) {
+      setSelectedHour(status.hour)
+    }
+  }, [status.hour, selectedHour])
 
   async function handleToggleTrigger(event: React.ChangeEvent<HTMLInputElement>) {
     if (event.target.checked) {

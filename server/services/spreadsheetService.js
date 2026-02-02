@@ -105,10 +105,10 @@ function getHistory(limit) {
     const row = data[i]
     if (!row[0]) continue
     history.push({
-      timestamp: row[0],
-      action: row[1] || '',
-      target: row[2] || '',
-      details: row[3] || ''
+      timestamp: row[0] instanceof Date ? row[0].toISOString() : String(row[0]),
+      action: String(row[1] || ''),
+      target: String(row[2] || ''),
+      details: String(row[3] || '')
     })
   }
 

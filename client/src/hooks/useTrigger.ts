@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { gasApi } from '../services/gas'
 import type { TriggerStatus } from '../types'
-
-function getErrorMessage(e: unknown): string {
-  if (typeof e === 'string') return e
-  if (e instanceof Error) return e.message
-  return String(e)
-}
+import { getErrorMessage } from '../utils/error'
 
 export function useTrigger() {
   const [status, setStatus] = useState<TriggerStatus>({ enabled: false, hour: null })

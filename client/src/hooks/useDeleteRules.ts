@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { gasApi } from '../services/gas'
 import type { DeleteRule } from '../types'
-
-function getErrorMessage(e: unknown, fallback: string): string {
-  return e instanceof Error ? e.message : fallback
-}
+import { getErrorMessage } from '../utils/error'
 
 export function useDeleteRules() {
   const [rules, setRules] = useState<DeleteRule[]>([])
