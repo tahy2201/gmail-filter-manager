@@ -1,28 +1,16 @@
-/**
- * Gmail Delete Service
- * メール削除ルールの管理と実行を担当
- */
-
 const DELETE_RULES_SHEET = 'DeleteRules'
 
-/**
- * スプレッドシートから削除ルールを取得
- * @returns {Array} 削除ルール一覧
- */
 function getDeleteRulesFromStorage() {
   const sheet = getSheet(DELETE_RULES_SHEET)
   const lastRow = sheet.getLastRow()
 
-  if (lastRow <= 1) {
-    return []
-  }
+  if (lastRow <= 1) return []
 
   const data = sheet.getRange(2, 1, lastRow - 1, 3).getValues()
   const rules = []
 
   for (const row of data) {
-    if (!row[0]) continue // labelName が空ならスキップ
-
+    if (!row[0]) continue
     rules.push({
       labelName: row[0],
       delayDays: Number(row[1]) || 30,
@@ -33,38 +21,23 @@ function getDeleteRulesFromStorage() {
   return rules
 }
 
-/**
- * 削除ルールをスプレッドシートに保存
- * @param {Array} rules - 削除ルール一覧
- * @returns {Object} 保存結果
- */
 function saveDeleteRulesToStorage(rules) {
   const sheet = getSheet(DELETE_RULES_SHEET)
-
-  // 既存データをクリア（ヘッダー以外）
   const lastRow = sheet.getLastRow()
+
   if (lastRow > 1) {
     sheet.getRange(2, 1, lastRow - 1, 3).clearContent()
   }
 
-  // 新しいデータを書き込み
   if (rules.length > 0) {
     const data = rules.map((r) => [r.labelName, r.delayDays, r.enabled])
-
     sheet.getRange(2, 1, data.length, 3).setValues(data)
   }
 
   addHistory('SAVE_DELETE_RULES', 'DeleteRules', `Saved ${rules.length} rules`)
-
   return { success: true }
 }
 
-/**
- * ラベルに基づいてメールを削除
- * @param {string} labelName - ラベル名
- * @param {number} days - 経過日数
- * @returns {Object} 削除結果
- */
 function executeDeleteByLabel(labelName, days) {
   const query = `older_than:${days}d -is:important label:${labelName}`
   const threads = GmailApp.search(query)
@@ -81,38 +54,27 @@ function executeDeleteByLabel(labelName, days) {
 
   console.log(`Deleted ${deleted} threads from label "${labelName}" (${days} days old)`)
   addHistory('DELETE_EMAILS', labelName, `Deleted ${deleted} threads (older than ${days} days)`)
-
-  return { deleted: deleted }
+  return { deleted }
 }
 
-/**
- * 全ての有効な削除ルールを実行
- * @returns {Array} 実行結果一覧
- */
 function executeAllDeleteRules() {
   const rules = getDeleteRulesFromStorage()
   const results = []
 
   for (const rule of rules) {
-    if (rule.enabled) {
-      const result = executeDeleteByLabel(rule.labelName, rule.delayDays)
-      results.push({
-        label: rule.labelName,
-        days: rule.delayDays,
-        deleted: result.deleted
-      })
-    }
+    if (!rule.enabled) continue
+    const result = executeDeleteByLabel(rule.labelName, rule.delayDays)
+    results.push({
+      label: rule.labelName,
+      days: rule.delayDays,
+      deleted: result.deleted
+    })
   }
 
   return results
 }
 
-/**
- * 日次トリガーをセットアップ
- * @param {number} hour - 実行時間（0-23）
- */
 function setupDailyDeleteTrigger(hour) {
-  // 既存のトリガーを削除
   const triggers = ScriptApp.getProjectTriggers()
   for (const trigger of triggers) {
     if (trigger.getHandlerFunction() === 'runScheduledDeleteRules') {
@@ -120,26 +82,54 @@ function setupDailyDeleteTrigger(hour) {
     }
   }
 
-  // 新しいトリガーを作成
+  const triggerHour = hour ?? 3
+
   ScriptApp.newTrigger('runScheduledDeleteRules')
     .timeBased()
-    .atHour(hour || 3)
+    .atHour(triggerHour)
     .everyDays(1)
     .inTimezone('Asia/Tokyo')
     .create()
 
-  console.log(`Daily delete trigger set for ${hour || 3}:00 JST`)
+  PropertiesService.getScriptProperties().setProperty('DELETE_TRIGGER_HOUR', String(triggerHour))
+
+  console.log(`Daily delete trigger set for ${triggerHour}:00 JST`)
+  addHistory('SETUP_TRIGGER', 'DeleteTrigger', `Scheduled daily at ${triggerHour}:00 JST`)
+  return { success: true, hour: triggerHour }
 }
 
-/**
- * トリガーを削除
- */
 function removeDailyDeleteTrigger() {
   const triggers = ScriptApp.getProjectTriggers()
+  let removed = false
+
   for (const trigger of triggers) {
     if (trigger.getHandlerFunction() === 'runScheduledDeleteRules') {
       ScriptApp.deleteTrigger(trigger)
+      removed = true
     }
   }
+
+  PropertiesService.getScriptProperties().deleteProperty('DELETE_TRIGGER_HOUR')
+
   console.log('Daily delete trigger removed')
+  if (removed) {
+    addHistory('REMOVE_TRIGGER', 'DeleteTrigger', 'Daily trigger removed')
+  }
+  return { success: true }
+}
+
+function getDeleteTriggerStatus() {
+  const triggers = ScriptApp.getProjectTriggers()
+
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'runScheduledDeleteRules') {
+      const savedHour = PropertiesService.getScriptProperties().getProperty('DELETE_TRIGGER_HOUR')
+      const hour = savedHour ? Number(savedHour) : 3
+      return {
+        enabled: true,
+        hour: isNaN(hour) ? 3 : hour
+      }
+    }
+  }
+  return { enabled: false, hour: null }
 }

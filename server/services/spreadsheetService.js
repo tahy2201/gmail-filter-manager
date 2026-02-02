@@ -1,17 +1,8 @@
-/**
- * Spreadsheet Service
- * スプレッドシートへのアクセスを管理
- */
-
 const SPREADSHEET_ID_KEY = 'SPREADSHEET_ID'
 const FILTERS_SHEET_NAME = 'Filters'
 const DELETE_RULES_SHEET_NAME = 'DeleteRules'
 const HISTORY_SHEET_NAME = 'History'
 
-/**
- * スプレッドシートを取得（なければ作成）
- * @returns {Spreadsheet} スプレッドシート
- */
 function getOrCreateSpreadsheet() {
   const props = PropertiesService.getScriptProperties()
   let spreadsheetId = props.getProperty(SPREADSHEET_ID_KEY)
@@ -36,10 +27,6 @@ function getOrCreateSpreadsheet() {
   return ss
 }
 
-/**
- * シートを初期化
- * @param {Spreadsheet} ss - スプレッドシート
- */
 function initializeSheets(ss) {
   // Filters シート
   let filtersSheet = ss.getSheetByName(FILTERS_SHEET_NAME)
@@ -82,11 +69,6 @@ function initializeSheets(ss) {
   historySheet.getRange('A1:D1').setFontWeight('bold')
 }
 
-/**
- * 指定シートを取得
- * @param {string} sheetName - シート名
- * @returns {Sheet} シート
- */
 function getSheet(sheetName) {
   const ss = getOrCreateSpreadsheet()
   let sheet = ss.getSheetByName(sheetName)
@@ -99,36 +81,45 @@ function getSheet(sheetName) {
   return sheet
 }
 
-/**
- * 履歴を追加
- * @param {string} action - アクション名
- * @param {string} target - 対象
- * @param {string} details - 詳細
- */
 function addHistory(action, target, details) {
   const sheet = getSheet(HISTORY_SHEET_NAME)
   const timestamp = new Date().toISOString()
   sheet.appendRow([timestamp, action, target, details])
 }
 
-/**
- * スプレッドシートのURLを取得
- * @returns {string} URL
- */
-function getSpreadsheetUrl() {
-  const ss = getOrCreateSpreadsheet()
-  return ss.getUrl()
+function getHistory(limit) {
+  const maxRows = limit || 50
+  const sheet = getSheet(HISTORY_SHEET_NAME)
+  const lastRow = sheet.getLastRow()
+
+  if (lastRow <= 1) return []
+
+  const dataRowCount = lastRow - 1
+  const rowsToFetch = Math.min(dataRowCount, maxRows)
+  const startRow = lastRow - rowsToFetch + 1
+
+  const data = sheet.getRange(startRow, 1, rowsToFetch, 4).getValues()
+  const history = []
+
+  for (let i = data.length - 1; i >= 0; i--) {
+    const row = data[i]
+    if (!row[0]) continue
+    history.push({
+      timestamp: row[0] instanceof Date ? row[0].toISOString() : String(row[0]),
+      action: String(row[1] || ''),
+      target: String(row[2] || ''),
+      details: String(row[3] || '')
+    })
+  }
+
+  return history
 }
 
-/**
- * スプレッドシートIDを設定（既存シートを使う場合）
- * @param {string} spreadsheetId - スプレッドシートID
- */
-function setSpreadsheetId(spreadsheetId) {
-  const props = PropertiesService.getScriptProperties()
-  props.setProperty(SPREADSHEET_ID_KEY, spreadsheetId)
+function getSpreadsheetUrl() {
+  return getOrCreateSpreadsheet().getUrl()
+}
 
-  // シートを初期化
-  const ss = SpreadsheetApp.openById(spreadsheetId)
-  initializeSheets(ss)
+function setSpreadsheetId(spreadsheetId) {
+  PropertiesService.getScriptProperties().setProperty(SPREADSHEET_ID_KEY, spreadsheetId)
+  initializeSheets(SpreadsheetApp.openById(spreadsheetId))
 }

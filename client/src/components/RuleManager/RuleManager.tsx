@@ -1,24 +1,9 @@
 import { useMemo, useState } from 'react'
 import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  FormControl,
-  InputAdornment,
-  InputLabel,
-  LinearProgress,
-  MenuItem,
-  Select,
-  Snackbar,
-  Stack,
-  TextField,
-  Typography,
+  Alert, Box, Button, CircularProgress, FormControl, InputAdornment, InputLabel,
+  LinearProgress, MenuItem, Select, Snackbar, Stack, TextField, Typography,
 } from '@mui/material'
-import {
-  Add as AddIcon,
-  Search as SearchIcon,
-} from '@mui/icons-material'
+import { Add as AddIcon, Search as SearchIcon } from '@mui/icons-material'
 import { useDeleteRules } from '../../hooks/useDeleteRules'
 import { useFilters } from '../../hooks/useFilters'
 import { useLabelGroups } from '../../hooks/useLabelGroups'
@@ -26,6 +11,7 @@ import { useLabels } from '../../hooks/useLabels'
 import { gasApi } from '../../services/gas'
 import type { DeleteRule, FilterEntry } from '../../types'
 import { ConfirmDialog } from '../ConfirmDialog'
+import { DeleteSchedule } from '../DeleteSchedule'
 import { FilterEditForm } from '../FilterEditForm'
 import { Modal } from '../Modal'
 import { FilterTable } from './FilterTable'
@@ -75,15 +61,12 @@ export function RuleManager() {
     deleteRules,
   })
 
-  const deletingFilter = deletingFilterId
-    ? filters.find((f) => f.id === deletingFilterId)
-    : null
+  const deletingFilter = deletingFilterId ? filters.find((f) => f.id === deletingFilterId) : null
 
-  // 既存メールへのフィルタ適用を実行し、結果をSnackbarで表示
-  const applyToExistingAndNotify = async (
+  async function applyToExistingAndNotify(
     criteria: FilterEntry['criteria'],
     action: FilterEntry['action']
-  ) => {
+  ) {
     try {
       const result = await gasApi.applyToExistingMessages({ criteria, action })
 
@@ -102,7 +85,7 @@ export function RuleManager() {
     }
   }
 
-  const handleCreate = async (filterData: Omit<FilterEntry, 'id'>, applyToExisting?: boolean) => {
+  async function handleCreate(filterData: Omit<FilterEntry, 'id'>, applyToExisting?: boolean) {
     const success = await addFilter(filterData)
     if (success) {
       if (applyToExisting && filterData.action.label) {
@@ -112,7 +95,7 @@ export function RuleManager() {
     }
   }
 
-  const handleUpdate = async (filterData: FilterEntry, applyToExisting?: boolean) => {
+  async function handleUpdate(filterData: FilterEntry, applyToExisting?: boolean) {
     const success = await updateFilter(filterData.id, filterData)
     if (success) {
       if (applyToExisting && filterData.action.label) {
@@ -122,7 +105,7 @@ export function RuleManager() {
     }
   }
 
-  const handleDelete = async () => {
+  async function handleDelete() {
     if (!deletingFilterId) return
     const success = await deleteFilter(deletingFilterId)
     if (success) {
@@ -130,25 +113,29 @@ export function RuleManager() {
     }
   }
 
-  const handleUpdateDeleteRule = async (labelName: string, updatedRule: DeleteRule | null) => {
+  async function handleUpdateDeleteRule(labelName: string, updatedRule: DeleteRule | null) {
     if (updatedRule === null) {
-      const newRules = deleteRules.filter((r) => r.labelName !== labelName)
-      await saveRules(newRules)
+      await saveRules(deleteRules.filter((r) => r.labelName !== labelName))
+      return
+    }
+
+    const exists = deleteRules.some((r) => r.labelName === labelName)
+    if (exists) {
+      await saveRules(deleteRules.map((r) => (r.labelName === labelName ? updatedRule : r)))
     } else {
-      const existingRule = deleteRules.find((r) => r.labelName === labelName)
-      if (existingRule) {
-        const newRules = deleteRules.map((r) =>
-          r.labelName === labelName ? updatedRule : r
-        )
-        await saveRules(newRules)
-      } else {
-        await saveRules([...deleteRules, updatedRule])
-      }
+      await saveRules([...deleteRules, updatedRule])
     }
   }
 
-  const handleExecuteDeleteRule = async (labelName: string, days: number) => {
-    return executeRule(labelName, days)
+  async function handleExecuteDeleteRule(labelName: string, days: number) {
+    setSnackbarMessage(`${labelName} の削除を実行中...`)
+    const count = await executeRule(labelName, days)
+    if (count >= 0) {
+      setSnackbarMessage(`${labelName}: ${count}件のメールを削除しました`)
+    } else {
+      setSnackbarMessage(`${labelName}: 削除に失敗しました`)
+    }
+    return count
   }
 
   const loading = filtersLoading || rulesLoading
@@ -162,75 +149,82 @@ export function RuleManager() {
     )
   }
 
-  if (error) {
-    return <Alert severity="error">{error}</Alert>
-  }
+  if (error) return <Alert severity="error">{error}</Alert>
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 140px)' }}>
-      {/* 保存中のプログレスバー */}
-      {saving && (
-        <LinearProgress sx={{ position: 'absolute', top: 0, left: 0, right: 0 }} />
-      )}
+      {saving && <LinearProgress sx={{ position: 'absolute', top: 0, left: 0, right: 0 }} />}
 
-      {/* コンパクトなツールバー */}
       <Stack
         direction="row"
         spacing={1}
         alignItems="center"
-        sx={{ mb: 1, flexWrap: 'wrap', gap: 1 }}
+        justifyContent="space-between"
+        sx={{ mb: 1, width: '100%' }}
       >
-        {/* 新規追加ボタン */}
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={() => setIsCreateModalOpen(true)}
-        >
-          新規
-        </Button>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <TextField
+            size="small"
+            placeholder="検索..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ width: 150 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel id="label-filter-label">ラベル</InputLabel>
+            <Select
+              labelId="label-filter-label"
+              value={labelFilter}
+              onChange={(e) => setLabelFilter(e.target.value)}
+              label="ラベル"
+            >
+              <MenuItem value="">すべて</MenuItem>
+              {labelOptions.map((l) => (
+                <MenuItem key={l} value={l}>
+                  {l}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Typography variant="caption" color="text.secondary">
+            {filteredFilters.length} / {filters.length} 件
+          </Typography>
+        </Stack>
 
-        {/* 検索 */}
-        <TextField
-          size="small"
-          placeholder="検索..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ width: 150 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" sx={{ color: 'text.disabled' }} />
-              </InputAdornment>
-            ),
-          }}
-        />
-
-        {/* ラベルフィルタ */}
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel id="label-filter-label">ラベル</InputLabel>
-          <Select
-            labelId="label-filter-label"
-            value={labelFilter}
-            onChange={(e) => setLabelFilter(e.target.value)}
-            label="ラベル"
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={() => setIsCreateModalOpen(true)}
           >
-            <MenuItem value="">すべて</MenuItem>
-            {labelOptions.map((l) => (
-              <MenuItem key={l} value={l}>
-                {l}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* 件数 */}
-        <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-          {filteredFilters.length} / {filters.length} 件
-        </Typography>
+            新規
+          </Button>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              px: 1,
+              py: 0.5,
+              bgcolor: 'grey.50',
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'grey.200',
+            }}
+          >
+            <DeleteSchedule />
+          </Box>
+        </Stack>
       </Stack>
 
-      {/* フィルタテーブル（残りの高さを使用） */}
       <Box sx={{ flex: 1, overflow: 'hidden' }}>
         <FilterTable
           labelGroups={labelGroups}
@@ -241,7 +235,6 @@ export function RuleManager() {
         />
       </Box>
 
-      {/* 新規作成モーダル */}
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => !saving && setIsCreateModalOpen(false)}
@@ -255,7 +248,6 @@ export function RuleManager() {
         />
       </Modal>
 
-      {/* 編集モーダル */}
       <Modal
         isOpen={!!editingFilter}
         onClose={() => !saving && setEditingFilter(null)}
@@ -272,7 +264,6 @@ export function RuleManager() {
         )}
       </Modal>
 
-      {/* 削除確認ダイアログ */}
       <ConfirmDialog
         isOpen={!!deletingFilterId}
         title="フィルタを削除"
@@ -285,10 +276,9 @@ export function RuleManager() {
         onCancel={() => setDeletingFilterId(null)}
       />
 
-      {/* スナックバー */}
       <Snackbar
         open={!!snackbarMessage}
-        autoHideDuration={3000}
+        autoHideDuration={5000}
         onClose={() => setSnackbarMessage(null)}
         message={snackbarMessage}
       />

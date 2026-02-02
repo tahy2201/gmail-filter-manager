@@ -1,20 +1,21 @@
 import { useCallback, useEffect, useState } from 'react'
 import { gasApi } from '../services/gas'
 import type { DeleteRule } from '../types'
+import { getErrorMessage } from '../utils/error'
 
 export function useDeleteRules() {
   const [rules, setRules] = useState<DeleteRule[]>([])
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchRules = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await gasApi.getDeleteRules()
-      setRules(data)
+      setRules(await gasApi.getDeleteRules())
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to fetch delete rules')
+      setError(getErrorMessage(e, 'Failed to fetch delete rules'))
     } finally {
       setLoading(false)
     }
@@ -25,17 +26,17 @@ export function useDeleteRules() {
   }, [fetchRules])
 
   const saveRules = useCallback(async (newRules: DeleteRule[]) => {
-    setLoading(true)
+    setSaving(true)
     setError(null)
     try {
       await gasApi.saveDeleteRules(newRules)
       setRules(newRules)
       return true
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save delete rules')
+      setError(getErrorMessage(e, 'Failed to save delete rules'))
       return false
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }, [])
 
@@ -44,10 +45,10 @@ export function useDeleteRules() {
       const result = await gasApi.executeDeleteRule(labelName, days)
       return result.deleted
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to execute delete rule')
+      setError(getErrorMessage(e, 'Failed to execute delete rule'))
       return -1
     }
   }, [])
 
-  return { rules, loading, error, refetch: fetchRules, saveRules, executeRule }
+  return { rules, loading, saving, error, refetch: fetchRules, saveRules, executeRule }
 }

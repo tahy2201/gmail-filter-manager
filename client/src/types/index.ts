@@ -1,4 +1,3 @@
-/** フィルタの条件 */
 export interface FilterCriteria {
   from?: string
   to?: string
@@ -7,7 +6,6 @@ export interface FilterCriteria {
   doesNotHaveTheWord?: string
 }
 
-/** フィルタのアクション */
 export interface FilterAction {
   label?: string
   shouldArchive?: boolean
@@ -17,21 +15,18 @@ export interface FilterAction {
   forwardTo?: string
 }
 
-/** フィルタエントリー */
 export interface FilterEntry {
   id: string
   criteria: FilterCriteria
   action: FilterAction
 }
 
-/** Gmailラベル */
 export interface Label {
   id: string
   name: string
   type: 'system' | 'user'
 }
 
-/** メールプレビュー */
 export interface EmailPreview {
   id: string
   threadId: string
@@ -41,21 +36,18 @@ export interface EmailPreview {
   snippet: string
 }
 
-/** 削除ルール */
 export interface DeleteRule {
   labelName: string
   delayDays: number
   enabled: boolean
 }
 
-/** API レスポンス */
 export interface ApiResponse<T> {
   success: boolean
   data?: T
   error?: string
 }
 
-/** フィルタ差分プレビュー項目 */
 export interface FilterDiffItem {
   gmailId?: string
   from?: string
@@ -65,7 +57,6 @@ export interface FilterDiffItem {
   label?: string
 }
 
-/** フィルタ差分適用結果 */
 export interface FilterDiffResult {
   created: number
   deleted: number
@@ -79,9 +70,20 @@ export interface FilterDiffResult {
   wouldDelete?: number
 }
 
-/** ラベルグループデータ（統合ビュー用） */
 export interface LabelGroupData {
   labelName: string
   filters: FilterEntry[]
   deleteRule: DeleteRule | null
+}
+
+export interface TriggerStatus {
+  enabled: boolean
+  hour: number | null
+}
+
+export interface HistoryEntry {
+  timestamp: string
+  action: string
+  target: string
+  details: string
 }

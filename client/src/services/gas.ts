@@ -1,16 +1,13 @@
-/**
- * GAS API クライアント
- */
-
 import type {
   DeleteRule,
   EmailPreview,
   FilterDiffResult,
   FilterEntry,
+  HistoryEntry,
   Label,
+  TriggerStatus,
 } from '../types'
 
-// GAS の google.script.run の型定義
 declare const google: {
   script: {
     run: {
@@ -37,11 +34,12 @@ interface GasRunner {
   getDataSpreadsheetUrl: () => void
   setup: () => void
   applyFilterDiff: (dryRun: boolean) => void
+  getTriggerStatus: () => void
+  setupDeleteTrigger: (hour: number) => void
+  removeDeleteTrigger: () => void
+  getDeleteHistory: (limit: number) => void
 }
 
-/**
- * GAS関数を Promise でラップ
- */
 function runGasFunction<T>(
   functionName: string,
   ...args: unknown[]
@@ -58,70 +56,44 @@ function runGasFunction<T>(
 }
 
 export const gasApi = {
-  /** フィルタ一覧を取得 */
   getFilters: (): Promise<FilterEntry[]> => runGasFunction('getFilters'),
 
-  /** フィルタを保存 */
-  saveFilters: (
-    filters: FilterEntry[],
-  ): Promise<{ success: boolean; count: number }> =>
+  saveFilters: (filters: FilterEntry[]): Promise<{ success: boolean; count: number }> =>
     runGasFunction('saveFilters', filters),
 
-  /** XML からフィルタをインポート */
-  importFiltersXml: (
-    xml: string,
-  ): Promise<{ success: boolean; count: number }> =>
+  importFiltersXml: (xml: string): Promise<{ success: boolean; count: number }> =>
     runGasFunction('importFiltersXml', xml),
 
-  /** Gmail にフィルタを適用 */
-  applyFiltersToGmail: (): Promise<{
-    success: boolean
-    applied: number
-    total: number
-  }> => runGasFunction('applyFiltersToGmail'),
+  applyFiltersToGmail: (): Promise<{ success: boolean; applied: number; total: number }> =>
+    runGasFunction('applyFiltersToGmail'),
 
-  /** メール検索 */
   searchEmails: (query: string, max = 50): Promise<EmailPreview[]> =>
     runGasFunction('searchEmails', query, max),
 
-  /** ラベル一覧を取得 */
   getLabels: (): Promise<Label[]> => runGasFunction('getLabels'),
 
-  /** 削除ルール一覧を取得 */
   getDeleteRules: (): Promise<DeleteRule[]> => runGasFunction('getDeleteRules'),
 
-  /** 削除ルールを保存 */
   saveDeleteRules: (rules: DeleteRule[]): Promise<{ success: boolean }> =>
     runGasFunction('saveDeleteRules', rules),
 
-  /** 削除ルールを実行 */
-  executeDeleteRule: (
-    labelName: string,
-    days: number,
-  ): Promise<{ deleted: number }> =>
+  executeDeleteRule: (labelName: string, days: number): Promise<{ deleted: number }> =>
     runGasFunction('executeDeleteRule', labelName, days),
 
-  /** 現在のユーザー情報を取得 */
-  getCurrentUser: (): Promise<{ email: string }> =>
-    runGasFunction('getCurrentUser'),
+  getCurrentUser: (): Promise<{ email: string }> => runGasFunction('getCurrentUser'),
 
-  /** フィルタ外メールを取得 */
   getUnfilteredEmails: (max = 50): Promise<EmailPreview[]> =>
     runGasFunction('getUnfilteredEmails', max),
 
-  /** スプレッドシートURLを取得 */
   getDataSpreadsheetUrl: (): Promise<{ url: string }> =>
     runGasFunction('getDataSpreadsheetUrl'),
 
-  /** 初期セットアップ */
   setup: (): Promise<{ spreadsheetUrl: string; spreadsheetId: string }> =>
     runGasFunction('setup'),
 
-  /** フィルタ差分を適用（自動同期用） */
   applyFilterDiff: (dryRun = false): Promise<FilterDiffResult> =>
     runGasFunction('applyFilterDiff', dryRun),
 
-  /** 既存の一致するメールにフィルタを適用 */
   applyToExistingMessages: (filter: {
     criteria: FilterEntry['criteria']
     action: FilterEntry['action']
@@ -133,4 +105,15 @@ export const gasApi = {
     error?: string
     errors?: string[]
   }> => runGasFunction('applyToExistingMessages', filter),
+
+  getTriggerStatus: (): Promise<TriggerStatus> => runGasFunction('getTriggerStatus'),
+
+  setupDeleteTrigger: (hour: number): Promise<{ success: boolean; hour: number }> =>
+    runGasFunction('setupDeleteTrigger', hour),
+
+  removeDeleteTrigger: (): Promise<{ success: boolean }> =>
+    runGasFunction('removeDeleteTrigger'),
+
+  getDeleteHistory: (limit = 50): Promise<HistoryEntry[]> =>
+    runGasFunction('getDeleteHistory', limit),
 }
