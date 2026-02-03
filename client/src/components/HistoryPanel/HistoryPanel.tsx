@@ -61,7 +61,7 @@ export function HistoryPanel() {
           <Typography color="text.secondary">履歴がありません</Typography>
         </Paper>
       ) : (
-        <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 250px)' }}>
+        <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 200px)' }}>
           <Table stickyHeader size="small">
             <TableHead>
               <TableRow>

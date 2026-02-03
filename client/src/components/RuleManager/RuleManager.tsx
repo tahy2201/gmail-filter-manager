@@ -152,7 +152,7 @@ export function RuleManager() {
   if (error) return <Alert severity="error">{error}</Alert>
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 140px)' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)' }}>
       {saving && <LinearProgress sx={{ position: 'absolute', top: 0, left: 0, right: 0 }} />}
 
       <Stack
