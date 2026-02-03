@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -29,13 +29,20 @@ export function UnlabeledEmails() {
       setEmails(result)
       setSelectedEmail(result.length > 0 ? result[0] : null)
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : 'ラベルなしメールの取得に失敗しました',
-      )
+      const errorMessage = e instanceof Error
+        ? `エラー: ${e.message}`
+        : 'ラベルなしメールの取得に失敗しました'
+      setError(errorMessage)
+      console.error('Failed to fetch unlabeled emails:', e)
     } finally {
       setLoading(false)
     }
   }
+
+  // 初回マウント時に自動検索
+  useEffect(() => {
+    handleSearch()
+  }, [])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)' }}>
