@@ -69,21 +69,7 @@ function getEmailDetail(messageId) {
  * @returns {string} フォーマットされた日付
  */
 function formatDate(date) {
-  const now = new Date()
-  const diff = now - date
-
-  // 今日
-  if (diff < 24 * 60 * 60 * 1000 && date.getDate() === now.getDate()) {
-    return Utilities.formatDate(date, 'Asia/Tokyo', 'HH:mm')
-  }
-
-  // 今年
-  if (date.getFullYear() === now.getFullYear()) {
-    return Utilities.formatDate(date, 'Asia/Tokyo', 'M/d')
-  }
-
-  // それ以前
-  return Utilities.formatDate(date, 'Asia/Tokyo', 'yyyy/M/d')
+  return Utilities.formatDate(date, 'Asia/Tokyo', 'yyyy-MM-dd HH:mm:ss')
 }
 
 /**

@@ -263,31 +263,8 @@ function getOrCreateLabel(labelName) {
  * @returns {Array} メール一覧
  */
 function findUnfilteredEmails(max) {
-  const filters = getFiltersFromSpreadsheet()
-
-  // 全フィルタのクエリを否定で結合
-  const negatedQueries = []
-  for (const filter of filters) {
-    const parts = []
-    if (filter.criteria.from) {
-      parts.push(`from:(${filter.criteria.from})`)
-    }
-    if (filter.criteria.to) {
-      parts.push(`to:(${filter.criteria.to})`)
-    }
-    if (filter.criteria.subject) {
-      parts.push(`subject:(${filter.criteria.subject})`)
-    }
-    if (filter.criteria.hasTheWord) {
-      parts.push(`(${filter.criteria.hasTheWord})`)
-    }
-
-    if (parts.length > 0) {
-      negatedQueries.push(`-(${parts.join(' ')})`)
-    }
-  }
-
-  const query = negatedQueries.join(' ')
+  // ユーザーラベルがついていないメールを検索（送信済み・下書きは除外）
+  const query = 'has:nouserlabels -in:sent -in:drafts'
   return searchGmailEmails(query, max)
 }
 

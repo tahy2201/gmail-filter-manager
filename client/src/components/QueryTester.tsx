@@ -3,7 +3,6 @@ import {
   Alert,
   Box,
   Button,
-  Divider,
   List,
   ListItem,
   ListItemText,
@@ -21,10 +20,6 @@ export function QueryTester() {
   const [results, setResults] = useState<EmailPreview[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [unfilteredEmails, setUnfilteredEmails] = useState<
-    EmailPreview[] | null
-  >(null)
-  const [loadingUnfiltered, setLoadingUnfiltered] = useState(false)
 
   const handleSearch = async () => {
     if (!query.trim()) return
@@ -38,21 +33,6 @@ export function QueryTester() {
       setResults(null)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleGetUnfiltered = async () => {
-    setLoadingUnfiltered(true)
-    setError(null)
-    try {
-      const emails = await gasApi.getUnfilteredEmails(50)
-      setUnfilteredEmails(emails)
-    } catch (e) {
-      setError(
-        e instanceof Error ? e.message : 'フィルタ外メールの取得に失敗しました',
-      )
-    } finally {
-      setLoadingUnfiltered(false)
     }
   }
 
@@ -126,67 +106,6 @@ export function QueryTester() {
           )}
         </Paper>
       )}
-
-      <Divider />
-
-      {/* フィルタ外メール */}
-      <Box>
-        <Typography variant="h6" color="primary" gutterBottom>
-          フィルタ外のメール
-        </Typography>
-        <Button
-          variant="contained"
-          color="success"
-          onClick={handleGetUnfiltered}
-          disabled={loadingUnfiltered}
-          startIcon={<SearchIcon />}
-        >
-          {loadingUnfiltered ? '読み込み中...' : 'フィルタ外メールを検索'}
-        </Button>
-
-        {unfilteredEmails !== null && (
-          <Paper sx={{ mt: 2, overflow: 'hidden' }}>
-            <Box sx={{ p: 2, bgcolor: 'grey.100' }}>
-              <Typography variant="subtitle2">
-                {unfilteredEmails.length} 件のフィルタ外メール
-              </Typography>
-            </Box>
-            {unfilteredEmails.length === 0 ? (
-              <Box sx={{ p: 3, textAlign: 'center' }}>
-                <Typography color="text.secondary">
-                  最近のメールはすべていずれかのフィルタに一致しています
-                </Typography>
-              </Box>
-            ) : (
-              <List disablePadding>
-                {unfilteredEmails.map((email, idx) => (
-                  <ListItem
-                    key={email.id}
-                    divider={idx < unfilteredEmails.length - 1}
-                    sx={{ '&:hover': { bgcolor: 'action.hover' } }}
-                  >
-                    <ListItemText
-                      primary={email.subject || '(件名なし)'}
-                      secondary={
-                        <>
-                          <Typography component="span" variant="body2" color="text.secondary">
-                            {email.from} - {email.date}
-                          </Typography>
-                          <br />
-                          <Typography component="span" variant="body2" color="text.secondary" noWrap>
-                            {email.snippet}
-                          </Typography>
-                        </>
-                      }
-                      primaryTypographyProps={{ fontWeight: 'bold' }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-          </Paper>
-        )}
-      </Box>
     </Stack>
   )
 }

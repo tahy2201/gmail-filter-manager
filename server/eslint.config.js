@@ -25,7 +25,15 @@ export default [
         executeAllDeleteRules: 'readonly',
         findUnfilteredEmails: 'readonly',
         getSpreadsheetUrl: 'readonly',
-        getOrCreateSpreadsheet: 'readonly'
+        getOrCreateSpreadsheet: 'readonly',
+        buildGmailFilter: 'readonly',
+        previewFiltersDiff: 'readonly',
+        applyFiltersDiff: 'readonly',
+        applyFilterToExistingMessages: 'readonly',
+        getDeleteTriggerStatus: 'readonly',
+        setupDailyDeleteTrigger: 'readonly',
+        removeDailyDeleteTrigger: 'readonly',
+        getHistory: 'readonly'
       }
     },
     rules: {
