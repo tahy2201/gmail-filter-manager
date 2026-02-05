@@ -21,15 +21,29 @@ gmail-filter-manager/
 │   │   └── types/index.ts   # 型定義
 │   └── vite.config.ts
 ├── server/                  # GAS コード
-│   ├── webapp.js            # doGet + API エンドポイント
-│   ├── services/
-│   │   ├── filterService.js     # フィルタ CRUD、XMLパース
-│   │   ├── filterSyncService.js # Gmail差分同期
-│   │   ├── labelService.js      # Gmail ラベル取得
-│   │   ├── emailService.js      # メール検索
-│   │   ├── deleteService.js     # 削除ルール管理・実行
-│   │   └── spreadsheetService.js # スプレッドシート管理
-│   ├── utils/
+│   ├── webapp.js            # Webエントリーポイント (doGet のみ)
+│   ├── controllers/         # API層 (google.script.run から呼ばれる公開関数)
+│   │   ├── filterController.js       # フィルタ管理API (7関数)
+│   │   ├── emailController.js        # メール検索API (2関数)
+│   │   ├── deleteRuleController.js   # 削除ルール管理API (5関数)
+│   │   ├── triggerController.js      # トリガー管理API (3関数)
+│   │   ├── labelController.js        # ラベル管理API (1関数)
+│   │   └── systemController.js       # システム設定API (3関数)
+│   ├── services/            # ビジネスロジック層（API呼び出し・副作用あり）
+│   │   ├── filterService.js          # フィルタ CRUD (6関数, 229行)
+│   │   ├── filterSyncService.js      # Gmail差分同期 (286行)
+│   │   ├── emailService.js           # メール検索 (2関数, 47行)
+│   │   ├── deleteRuleService.js      # 削除ルール管理 (4関数, 88行)
+│   │   ├── triggerService.js         # トリガー管理 (3関数, 77行)
+│   │   ├── labelService.js           # ラベル取得/作成 (2関数, 51行)
+│   │   └── spreadsheetService.js     # スプレッドシート操作 (6関数, 107行)
+│   ├── utils/               # ユーティリティ層（純粋関数のみ・副作用なし）
+│   │   ├── mappers/         # データマッピング（オブジェクト ⇔ 配列変換）
+│   │   │   ├── filterMapper.js      # フィルタ変換 (4関数)
+│   │   │   ├── deleteRuleMapper.js  # 削除ルール変換 (4関数)
+│   │   │   └── historyMapper.js     # 履歴変換 (2関数)
+│   │   ├── filterUtils.js   # フィルタ変換・パース (2関数: parseFiltersXml, buildSearchQuery)
+│   │   ├── stringUtils.js   # 文字列操作 (2関数: formatDate, truncate)
 │   │   └── importHelper.js  # XMLインポート補助（GASエディタから実行）
 │   └── appsscript.json      # OAuth スコープ設定
 └── package.json

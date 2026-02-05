@@ -27,40 +27,20 @@ function listGmailLabels() {
 }
 
 /**
- * ラベルを ID で取得
- * @param {string} labelId - ラベル ID
- * @returns {Object|null} ラベル
+ * ラベルを取得または作成
+ * @param {string} labelName - ラベル名
+ * @returns {Object} Gmail ラベル
  */
-function getLabelById(labelId) {
-  try {
-    const label = Gmail.Users.Labels.get('me', labelId)
-    return {
-      id: label.id,
-      name: label.name,
-      type: label.type === 'system' ? 'system' : 'user'
-    }
-  } catch (e) {
-    return null
+function getOrCreateLabel(labelName) {
+  const labels = Gmail.Users.Labels.list('me').labels || []
+  const existing = labels.find((l) => l.name === labelName)
+
+  if (existing) {
+    return existing
   }
-}
 
-/**
- * ラベルを名前で取得
- * @param {string} labelName - ラベル名
- * @returns {Object|null} ラベル
- */
-function getLabelByName(labelName) {
-  const labels = listGmailLabels()
-  return labels.find((l) => l.name === labelName) || null
-}
-
-/**
- * ラベルを作成
- * @param {string} labelName - ラベル名
- * @returns {Object} 作成されたラベル
- */
-function createLabel(labelName) {
-  const label = Gmail.Users.Labels.create(
+  // ラベルを作成
+  return Gmail.Users.Labels.create(
     {
       name: labelName,
       labelListVisibility: 'labelShow',
@@ -68,25 +48,4 @@ function createLabel(labelName) {
     },
     'me'
   )
-
-  return {
-    id: label.id,
-    name: label.name,
-    type: 'user'
-  }
-}
-
-/**
- * ラベルを削除
- * @param {string} labelId - ラベル ID
- * @returns {boolean} 成功したかどうか
- */
-function deleteLabel(labelId) {
-  try {
-    Gmail.Users.Labels.remove('me', labelId)
-    return true
-  } catch (e) {
-    console.error('Error deleting label:', e)
-    return false
-  }
 }

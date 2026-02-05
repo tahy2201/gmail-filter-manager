@@ -18,30 +18,7 @@ function getFiltersFromSpreadsheet() {
   }
 
   const data = sheet.getRange(2, 1, lastRow - 1, 10).getValues()
-  const filters = []
-
-  for (const row of data) {
-    if (!row[0]) continue // ID が空ならスキップ
-
-    filters.push({
-      id: row[0],
-      criteria: {
-        from: row[1] || undefined,
-        to: row[2] || undefined,
-        subject: row[3] || undefined,
-        hasTheWord: row[4] || undefined,
-        doesNotHaveTheWord: row[5] || undefined
-      },
-      action: {
-        label: row[6] || undefined,
-        shouldArchive: row[7] === true || row[7] === 'TRUE',
-        shouldMarkAsRead: row[8] === true || row[8] === 'TRUE',
-        shouldNeverSpam: row[9] === true || row[9] === 'TRUE'
-      }
-    })
-  }
-
-  return filters
+  return rowsToFilters(data)
 }
 
 /**
@@ -60,19 +37,7 @@ function saveFiltersToSpreadsheet(filters) {
 
   // 新しいデータを書き込み
   if (filters.length > 0) {
-    const data = filters.map((f) => [
-      f.id,
-      f.criteria.from || '',
-      f.criteria.to || '',
-      f.criteria.subject || '',
-      f.criteria.hasTheWord || '',
-      f.criteria.doesNotHaveTheWord || '',
-      f.action.label || '',
-      f.action.shouldArchive || false,
-      f.action.shouldMarkAsRead || false,
-      f.action.shouldNeverSpam || false
-    ])
-
+    const data = filtersToRows(filters)
     sheet.getRange(2, 1, data.length, 10).setValues(data)
   }
 
@@ -89,77 +54,6 @@ function saveFiltersToSpreadsheet(filters) {
 function importFiltersFromXml(xml) {
   const filters = parseFiltersXml(xml)
   return saveFiltersToSpreadsheet(filters)
-}
-
-/**
- * Gmail フィルタ XML をパース
- * @param {string} xml - XML 文字列
- * @returns {Array} フィルタ一覧
- */
-function parseFiltersXml(xml) {
-  const doc = XmlService.parse(xml)
-  const root = doc.getRootElement()
-  const ns = root.getNamespace()
-  const appsNs = XmlService.getNamespace('apps', 'http://schemas.google.com/apps/2006')
-
-  const entries = root.getChildren('entry', ns)
-  const filters = []
-
-  for (const entry of entries) {
-    const id = entry.getChildText('id', ns) || ''
-    const properties = entry.getChildren('property', appsNs)
-
-    const filter = {
-      id: id,
-      criteria: {},
-      action: {}
-    }
-
-    for (const prop of properties) {
-      const name = prop.getAttribute('name').getValue()
-      const value = prop.getAttribute('value').getValue()
-
-      switch (name) {
-        case 'from':
-          filter.criteria.from = value
-          break
-        case 'to':
-          filter.criteria.to = value
-          break
-        case 'subject':
-          filter.criteria.subject = value
-          break
-        case 'hasTheWord':
-          filter.criteria.hasTheWord = value
-          break
-        case 'doesNotHaveTheWord':
-          filter.criteria.doesNotHaveTheWord = value
-          break
-        case 'label':
-          filter.action.label = value
-          break
-        case 'shouldArchive':
-          filter.action.shouldArchive = value === 'true'
-          break
-        case 'shouldMarkAsRead':
-          filter.action.shouldMarkAsRead = value === 'true'
-          break
-        case 'shouldNeverSpam':
-          filter.action.shouldNeverSpam = value === 'true'
-          break
-        case 'shouldNeverMarkAsImportant':
-          filter.action.shouldNeverMarkAsImportant = value === 'true'
-          break
-        case 'forwardTo':
-          filter.action.forwardTo = value
-          break
-      }
-    }
-
-    filters.push(filter)
-  }
-
-  return filters
 }
 
 /**
@@ -231,119 +125,6 @@ function buildGmailFilter(filter) {
   }
 
   return gmailFilter
-}
-
-/**
- * ラベルを取得または作成
- * @param {string} labelName - ラベル名
- * @returns {Object} Gmail ラベル
- */
-function getOrCreateLabel(labelName) {
-  const labels = Gmail.Users.Labels.list('me').labels || []
-  const existing = labels.find((l) => l.name === labelName)
-
-  if (existing) {
-    return existing
-  }
-
-  // ラベルを作成
-  return Gmail.Users.Labels.create(
-    {
-      name: labelName,
-      labelListVisibility: 'labelShow',
-      messageListVisibility: 'show'
-    },
-    'me'
-  )
-}
-
-/**
- * フィルタ外メールを検索
- * @param {number} max - 最大件数
- * @returns {Array} メール一覧
- */
-function findUnfilteredEmails(max) {
-  // ユーザーラベルがついていないメールを検索（送信済み・下書きは除外）
-  const query = 'has:nouserlabels -in:sent -in:drafts'
-  return searchGmailEmails(query, max)
-}
-
-/**
- * 単一フィルタを追加
- * @param {Object} filter - フィルタ
- * @returns {Object} 保存結果
- */
-function addFilter(filter) {
-  const filters = getFiltersFromSpreadsheet()
-
-  // ID を生成
-  if (!filter.id) {
-    filter.id = 'filter_' + Date.now()
-  }
-
-  filters.push(filter)
-  return saveFiltersToSpreadsheet(filters)
-}
-
-/**
- * フィルタを更新
- * @param {string} filterId - フィルタID
- * @param {Object} updates - 更新内容
- * @returns {Object} 保存結果
- */
-function updateFilter(filterId, updates) {
-  const filters = getFiltersFromSpreadsheet()
-  const index = filters.findIndex((f) => f.id === filterId)
-
-  if (index === -1) {
-    throw new Error(`Filter not found: ${filterId}`)
-  }
-
-  filters[index] = { ...filters[index], ...updates }
-  return saveFiltersToSpreadsheet(filters)
-}
-
-/**
- * フィルタを削除
- * @param {string} filterId - フィルタID
- * @returns {Object} 保存結果
- */
-function deleteFilter(filterId) {
-  const filters = getFiltersFromSpreadsheet()
-  const newFilters = filters.filter((f) => f.id !== filterId)
-
-  if (newFilters.length === filters.length) {
-    throw new Error(`Filter not found: ${filterId}`)
-  }
-
-  return saveFiltersToSpreadsheet(newFilters)
-}
-
-/**
- * フィルタ条件から Gmail 検索クエリを構築
- * @param {Object} criteria - フィルタ条件
- * @returns {string} Gmail 検索クエリ
- */
-function buildSearchQuery(criteria) {
-  const parts = []
-
-  if (criteria.from) {
-    parts.push(`from:(${criteria.from})`)
-  }
-  if (criteria.to) {
-    parts.push(`to:(${criteria.to})`)
-  }
-  if (criteria.subject) {
-    parts.push(`subject:(${criteria.subject})`)
-  }
-  if (criteria.hasTheWord) {
-    parts.push(`(${criteria.hasTheWord})`)
-  }
-  if (criteria.doesNotHaveTheWord) {
-    parts.push(`-(${criteria.doesNotHaveTheWord})`)
-  }
-
-  return parts.join(' ')
 }
 
 // 既存メール適用の定数

@@ -99,27 +99,9 @@ function getHistory(limit) {
   const startRow = lastRow - rowsToFetch + 1
 
   const data = sheet.getRange(startRow, 1, rowsToFetch, 4).getValues()
-  const history = []
-
-  for (let i = data.length - 1; i >= 0; i--) {
-    const row = data[i]
-    if (!row[0]) continue
-    history.push({
-      timestamp: row[0] instanceof Date ? row[0].toISOString() : String(row[0]),
-      action: String(row[1] || ''),
-      target: String(row[2] || ''),
-      details: String(row[3] || '')
-    })
-  }
-
-  return history
+  return rowsToHistory(data)
 }
 
 function getSpreadsheetUrl() {
   return getOrCreateSpreadsheet().getUrl()
-}
-
-function setSpreadsheetId(spreadsheetId) {
-  PropertiesService.getScriptProperties().setProperty(SPREADSHEET_ID_KEY, spreadsheetId)
-  initializeSheets(SpreadsheetApp.openById(spreadsheetId))
 }
