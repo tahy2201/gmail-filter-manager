@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { gasApi } from '../services/gas'
+import { api as gasApi } from '../services'
 import type { Label } from '../types'
 
 export function useLabels() {

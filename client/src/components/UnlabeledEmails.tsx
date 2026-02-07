@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 import { Search as SearchIcon } from '@mui/icons-material'
-import { gasApi } from '../services/gas'
+import { api as gasApi } from '../services'
 import type { EmailPreview } from '../types'
 
 export function UnlabeledEmails() {
