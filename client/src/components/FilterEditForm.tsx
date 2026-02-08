@@ -14,6 +14,8 @@ import {
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import type { FilterEntry, Label } from '../types'
 
@@ -32,6 +34,9 @@ export function FilterEditForm({
   onCancel,
   loading,
 }: Props) {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+
   const [from, setFrom] = useState(filter?.criteria.from || '')
   const [to, setTo] = useState(filter?.criteria.to || '')
   const [subject, setSubject] = useState(filter?.criteria.subject || '')
@@ -103,7 +108,7 @@ export function FilterEditForm({
 
   return (
     <Box component="form" onSubmit={handleSubmit}>
-      <Stack spacing={3}>
+      <Stack spacing={isMobile ? 2 : 3}>
         {validationError && <Alert severity="error">{validationError}</Alert>}
 
         {/* 条件セクション */}
@@ -112,7 +117,7 @@ export function FilterEditForm({
             条件 (Criteria)
           </Typography>
 
-          <Stack spacing={2} sx={{ mt: 2 }}>
+          <Stack spacing={isMobile ? 1.5 : 2} sx={{ mt: isMobile ? 1.5 : 2 }}>
             <TextField
               label="差出人 (From)"
               value={from}
@@ -168,7 +173,7 @@ export function FilterEditForm({
             アクション (Action)
           </Typography>
 
-          <Stack spacing={2} sx={{ mt: 2 }}>
+          <Stack spacing={isMobile ? 1.5 : 2} sx={{ mt: isMobile ? 1.5 : 2 }}>
             <FormControl size="small" fullWidth>
               <InputLabel id="label-select-label">ラベルを付ける</InputLabel>
               <Select
@@ -220,7 +225,7 @@ export function FilterEditForm({
 
         {/* 既存メールへの適用オプション */}
         {label && (
-          <Box sx={{ bgcolor: 'action.hover', p: 2, borderRadius: 1 }}>
+          <Box sx={{ bgcolor: 'action.hover', p: isMobile ? 1.5 : 2, borderRadius: 1 }}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -240,7 +245,7 @@ export function FilterEditForm({
         )}
 
         {/* ボタン */}
-        <Stack direction="row" spacing={2} justifyContent="flex-end">
+        <Stack direction="row" spacing={isMobile ? 1.5 : 2} justifyContent="flex-end">
           <Button
             variant="outlined"
             onClick={onCancel}

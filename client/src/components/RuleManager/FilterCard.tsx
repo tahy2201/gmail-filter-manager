@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  Box, Button, Card, CardActions, CardContent, Chip, IconButton,
+  Box, Button, Card, CardActions, CardContent, Chip,
   Stack, Tooltip, Typography,
 } from '@mui/material'
 import {
@@ -9,6 +9,7 @@ import {
 import type { DeleteRule, FilterEntry } from '../../types'
 import { ActionIcons } from './ActionIcons'
 import { parseConditionItems } from './utils'
+import { ConfirmDialog } from '../ConfirmDialog'
 
 interface FilterCardProps {
   filter: FilterEntry
@@ -101,9 +102,18 @@ function MultipleItemsExpandable({ items, maxDisplay }: { items: string[]; maxDi
  */
 export function FilterCard({ filter, onEdit, onDelete }: FilterCardProps) {
   const { criteria, action } = filter
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  function handleDelete() {
+    if (onDelete) {
+      onDelete(filter.id)
+    }
+    setShowDeleteConfirm(false)
+  }
 
   return (
-    <Card sx={{ mb: 2 }}>
+    <>
+      <Card sx={{ mb: 2 }}>
       <CardContent sx={{ p: 1 }}>
         {/* 条件セクション */}
         <Box sx={{ mb: 1 }}>
@@ -195,30 +205,50 @@ export function FilterCard({ filter, onEdit, onDelete }: FilterCardProps) {
         </Box>
       </CardContent>
 
-      <CardActions sx={{ justifyContent: 'flex-end', px: 2, pb: 2 }}>
+      <CardActions sx={{ justifyContent: 'flex-end', px: 2, pb: 2, gap: 1 }}>
         {onEdit && (
-          <Tooltip title="編集">
-            <IconButton
-              color="primary"
-              onClick={() => onEdit(filter)}
-              sx={{ minWidth: 21, minHeight: 21 }}
-            >
-              <EditIcon sx={{ fontSize: iconSize }} />
-            </IconButton>
-          </Tooltip>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<EditIcon />}
+            onClick={() => onEdit(filter)}
+            sx={{
+              fontSize: '1rem',
+              minHeight: 48,
+              px: 3,
+            }}
+          >
+            編集
+          </Button>
         )}
         {onDelete && (
-          <Tooltip title="削除">
-            <IconButton
-              color="error"
-              onClick={() => onDelete(filter.id)}
-              sx={{ minWidth: 21, minHeight: 21 }}
-            >
-              <DeleteIcon sx={{ fontSize: iconSize }} />
-            </IconButton>
-          </Tooltip>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={() => setShowDeleteConfirm(true)}
+            sx={{
+              fontSize: '1rem',
+              minHeight: 48,
+              px: 3,
+            }}
+          >
+            削除
+          </Button>
         )}
       </CardActions>
     </Card>
+
+      {/* 削除確認ダイアログ */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="フィルタを削除"
+        message="このフィルタを削除してもよろしいですか？"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        confirmLabel="削除"
+        cancelLabel="キャンセル"
+      />
+    </>
   )
 }
