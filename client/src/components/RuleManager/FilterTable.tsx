@@ -2,13 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Box, Button, Chip, IconButton, Paper, Popover, Stack, Switch,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography,
+  useMediaQuery,
 } from '@mui/material'
 import {
-  Add as AddIcon, Archive as ArchiveIcon, Delete as DeleteIcon, Drafts as DraftsIcon,
+  Add as AddIcon, Delete as DeleteIcon,
   Edit as EditIcon, ForwardToInbox as ForwardToInboxIcon, PlayArrow as PlayArrowIcon,
-  StarBorder as StarBorderIcon, VerifiedUser as VerifiedUserIcon,
 } from '@mui/icons-material'
 import type { DeleteRule, FilterEntry, LabelGroupData } from '../../types'
+import { ActionIcons } from './ActionIcons'
+import { parseConditionItems } from './utils'
+import { FilterCardList } from './FilterCardList'
 
 interface ColumnWidths {
   label: number
@@ -116,46 +119,6 @@ interface FilterTableProps {
   onDeleteFilter?: (filterId: string) => void
   onUpdateDeleteRule?: (labelName: string, rule: DeleteRule | null) => void
   onExecuteDeleteRule?: (labelName: string, days: number) => Promise<number>
-}
-
-function parseConditionItems(v: string): string[] {
-  const prefixMatch = v.match(/^(\w+):\{(.+)\}$/)
-  if (prefixMatch) return prefixMatch[2].split(/\s+/).filter(Boolean)
-
-  const braceMatch = v.match(/^\{(.+)\}$/)
-  if (braceMatch) return braceMatch[1].split(/\s+/).filter(Boolean)
-
-  if (v.includes('|')) return v.split('|').map((s) => s.trim()).filter(Boolean)
-  return [v]
-}
-
-const ICON_SLOT_SX = { width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }
-
-function ActionIcons({ action }: { action: FilterEntry['action'] }) {
-  return (
-    <Box sx={{ display: 'flex', gap: 0.25 }}>
-      <Box sx={ICON_SLOT_SX}>
-        {action.shouldMarkAsRead && (
-          <Tooltip title="既読にする"><DraftsIcon fontSize="small" sx={{ color: 'primary.main' }} /></Tooltip>
-        )}
-      </Box>
-      <Box sx={ICON_SLOT_SX}>
-        {action.shouldNeverSpam && (
-          <Tooltip title="迷惑メールにしない"><VerifiedUserIcon fontSize="small" sx={{ color: 'success.main' }} /></Tooltip>
-        )}
-      </Box>
-      <Box sx={ICON_SLOT_SX}>
-        {action.shouldArchive && (
-          <Tooltip title="アーカイブ"><ArchiveIcon fontSize="small" sx={{ color: 'info.main' }} /></Tooltip>
-        )}
-      </Box>
-      <Box sx={ICON_SLOT_SX}>
-        {action.shouldNeverMarkAsImportant && (
-          <Tooltip title="重要にしない"><StarBorderIcon fontSize="small" sx={{ color: 'warning.main' }} /></Tooltip>
-        )}
-      </Box>
-    </Box>
-  )
 }
 
 function ConditionItemDisplay({ label, value, color }: { label: string; value: string; color: string }) {
@@ -351,6 +314,27 @@ export function FilterTable({
   onUpdateDeleteRule,
   onExecuteDeleteRule,
 }: FilterTableProps) {
+  // Feature Detection: 操作方法で判定（画面サイズではなく）
+  const hasCoarsePointer = useMediaQuery('(pointer: coarse)')
+  const cannotHover = useMediaQuery('(hover: none)')
+  const isTouchDevice = navigator.maxTouchPoints > 0
+
+  const shouldShowCardView = hasCoarsePointer || cannotHover || isTouchDevice
+
+  // カード表示（タッチデバイス）
+  if (shouldShowCardView) {
+    return (
+      <FilterCardList
+        labelGroups={labelGroups}
+        onEditFilter={onEditFilter}
+        onDeleteFilter={onDeleteFilter}
+        onUpdateDeleteRule={onUpdateDeleteRule}
+        onExecuteDeleteRule={onExecuteDeleteRule}
+      />
+    )
+  }
+
+  // テーブル表示（マウスデバイス）
   const [columnWidths, setColumnWidths] = useState<ColumnWidths>(loadColumnWidths)
 
   function handleResize(column: keyof ColumnWidths) {
