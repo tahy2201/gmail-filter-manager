@@ -25,7 +25,7 @@ function setupDailyDeleteTrigger(hour) {
     .inTimezone('Asia/Tokyo')
     .create()
 
-  PropertiesService.getScriptProperties().setProperty('DELETE_TRIGGER_HOUR', String(triggerHour))
+  PropertiesService.getUserProperties().setProperty('DELETE_TRIGGER_HOUR', String(triggerHour))
 
   console.log(`Daily delete trigger set for ${triggerHour}:00 JST`)
   addHistory('SETUP_TRIGGER', 'DeleteTrigger', `Scheduled daily at ${triggerHour}:00 JST`)
@@ -47,7 +47,7 @@ function removeDailyDeleteTrigger() {
     }
   }
 
-  PropertiesService.getScriptProperties().deleteProperty('DELETE_TRIGGER_HOUR')
+  PropertiesService.getUserProperties().deleteProperty('DELETE_TRIGGER_HOUR')
 
   console.log('Daily delete trigger removed')
   if (removed) {
@@ -65,7 +65,7 @@ function getDeleteTriggerStatus() {
 
   for (const trigger of triggers) {
     if (trigger.getHandlerFunction() === 'runScheduledDeleteRules') {
-      const savedHour = PropertiesService.getScriptProperties().getProperty('DELETE_TRIGGER_HOUR')
+      const savedHour = PropertiesService.getUserProperties().getProperty('DELETE_TRIGGER_HOUR')
       const hour = savedHour ? Number(savedHour) : 3
       return {
         enabled: true,
