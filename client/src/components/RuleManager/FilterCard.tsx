@@ -19,16 +19,31 @@ interface FilterCardProps {
   onDelete?: (filterId: string) => void
 }
 
-// React JSX Element型
-type JSXElement = React.ReactElement
 const columFontSize = '18px'
 const valueFontSize = '16px'
-const iconSize = '20px' 
+const iconSize = '20px'
+
+function ItemSeparator() {
+  return <span style={{ color: '#9aa0a6', margin: '0 12px' }}>|</span>
+}
+
+function ItemList({ items }: { items: string[] }) {
+  return (
+    <>
+      {items.map((item, idx) => (
+        <span key={item}>
+          {item}
+          {idx < items.length - 1 && <ItemSeparator />}
+        </span>
+      ))}
+    </>
+  )
+}
 
 /**
  * 複数アイテム表示（2件まで表示、それ以上は「他N件」ボタンで展開）
  */
-function renderMultipleItems(value: string, maxDisplay: number = 2): JSXElement {
+function renderMultipleItems(value: string, maxDisplay = 2): React.ReactElement {
   const items = parseConditionItems(value)
 
   if (items.length === 1) {
@@ -38,17 +53,11 @@ function renderMultipleItems(value: string, maxDisplay: number = 2): JSXElement 
   if (items.length <= maxDisplay) {
     return (
       <Box sx={{ display: 'inline-flex', flexWrap: 'wrap', fontSize: valueFontSize }}>
-        {items.map((item, idx) => (
-          <span key={item}>
-            {item}
-            {idx < items.length - 1 && <span style={{ color: '#9aa0a6', margin: '0 12px' }}>|</span>}
-          </span>
-        ))}
+        <ItemList items={items} />
       </Box>
     )
   }
 
-  // 3件以上の場合は展開可能に
   return <MultipleItemsExpandable items={items} maxDisplay={maxDisplay} />
 }
 
@@ -58,12 +67,7 @@ function MultipleItemsExpandable({ items, maxDisplay }: { items: string[]; maxDi
   if (expanded) {
     return (
       <Box sx={{ display: 'inline-flex', flexWrap: 'wrap', gap: 1, fontSize: valueFontSize }}>
-        {items.map((item, idx) => (
-          <span key={item}>
-            {item}
-            {idx < items.length - 1 && <span style={{ color: '#9aa0a6', margin: '0 12px' }}>|</span>}
-          </span>
-        ))}
+        <ItemList items={items} />
         <Button
           variant="text"
           onClick={() => setExpanded(false)}
@@ -80,12 +84,7 @@ function MultipleItemsExpandable({ items, maxDisplay }: { items: string[]; maxDi
 
   return (
     <Box sx={{ display: 'inline-flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', fontSize: valueFontSize }}>
-      {displayItems.map((item, idx) => (
-        <span key={item}>
-          {item}
-          {idx < displayItems.length - 1 && <span style={{ color: '#9aa0a6', margin: '0 12px' }}>|</span>}
-        </span>
-      ))}
+      <ItemList items={displayItems} />
       <Button
         variant="text"
         onClick={() => setExpanded(true)}
@@ -105,9 +104,7 @@ export function FilterCard({ filter, onEdit, onDelete }: FilterCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   function handleDelete() {
-    if (onDelete) {
-      onDelete(filter.id)
-    }
+    onDelete?.(filter.id)
     setShowDeleteConfirm(false)
   }
 
@@ -239,15 +236,12 @@ export function FilterCard({ filter, onEdit, onDelete }: FilterCardProps) {
       </CardActions>
     </Card>
 
-      {/* 削除確認ダイアログ */}
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         title="フィルタを削除"
         message="このフィルタを削除してもよろしいですか？"
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteConfirm(false)}
-        confirmLabel="削除"
-        cancelLabel="キャンセル"
       />
     </>
   )

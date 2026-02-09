@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  Box, Button, Chip, IconButton, Paper, Popover, Stack, Switch,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography,
-  useMediaQuery,
+  Box, Chip, IconButton, Paper, Popover,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography,
 } from '@mui/material'
 import {
-  Add as AddIcon, Delete as DeleteIcon,
-  Edit as EditIcon, ForwardToInbox as ForwardToInboxIcon, PlayArrow as PlayArrowIcon,
+  Delete as DeleteIcon, Edit as EditIcon, ForwardToInbox as ForwardToInboxIcon,
 } from '@mui/icons-material'
 import type { DeleteRule, FilterEntry, LabelGroupData } from '../../types'
 import { ActionIcons } from './ActionIcons'
+import { DeleteRuleCell } from './DeleteRuleCell'
 import { parseConditionItems } from './utils'
-import { FilterCardList } from './FilterCardList'
 
 interface ColumnWidths {
   label: number
@@ -153,160 +151,6 @@ function ConditionItemDisplay({ label, value, color }: { label: string; value: s
   )
 }
 
-interface DeleteRuleCellProps {
-  deleteRule: DeleteRule | null
-  rowSpan: number
-  labelName: string
-  onUpdateDeleteRule?: (labelName: string, rule: DeleteRule | null) => void
-  onExecuteDeleteRule?: (labelName: string, days: number) => Promise<number>
-}
-
-function DeleteRuleCell({ deleteRule, rowSpan, labelName, onUpdateDeleteRule, onExecuteDeleteRule }: DeleteRuleCellProps) {
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
-  const [editDaysStr, setEditDaysStr] = useState(String(deleteRule?.delayDays ?? 30))
-  const [executing, setExecuting] = useState(false)
-
-  function handleClick(e: React.MouseEvent<HTMLElement>) {
-    setEditDaysStr(String(deleteRule?.delayDays ?? 30))
-    setAnchorEl(e.currentTarget)
-  }
-
-  function handleClose() { setAnchorEl(null) }
-
-  function handleToggle() {
-    if (!deleteRule || !onUpdateDeleteRule) return
-    onUpdateDeleteRule(labelName, { ...deleteRule, enabled: !deleteRule.enabled })
-  }
-
-  function handleSave() {
-    if (!onUpdateDeleteRule) return
-    onUpdateDeleteRule(labelName, { labelName, delayDays: Number(editDaysStr) || 1, enabled: deleteRule?.enabled ?? true })
-    handleClose()
-  }
-
-  function handleRemove() {
-    if (!onUpdateDeleteRule) return
-    onUpdateDeleteRule(labelName, null)
-    handleClose()
-  }
-
-  async function handleExecute() {
-    if (!deleteRule || !onExecuteDeleteRule || executing) return
-    setExecuting(true)
-    handleClose()
-    try {
-      await onExecuteDeleteRule(labelName, deleteRule.delayDays)
-    } finally {
-      setExecuting(false)
-    }
-  }
-
-  const open = Boolean(anchorEl)
-
-  return (
-    <TableCell
-      rowSpan={rowSpan}
-      sx={{
-        minWidth: 100,
-        verticalAlign: 'top',
-        pt: 1,
-        cursor: 'pointer',
-        '&:hover': { bgcolor: 'action.hover' },
-      }}
-      onClick={handleClick}
-    >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>
-        {deleteRule ? (
-          <Chip
-            label={`${deleteRule.delayDays}日後`}
-            size="small"
-            color={deleteRule.enabled ? 'warning' : 'default'}
-            variant={deleteRule.enabled ? 'filled' : 'outlined'}
-          />
-        ) : (
-          <Tooltip title="削除ルールを追加">
-            <AddIcon fontSize="small" sx={{ color: 'text.disabled' }} />
-          </Tooltip>
-        )}
-      </Box>
-
-      <Popover
-        open={open}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Box sx={{ p: 2, minWidth: 220 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            {deleteRule ? '削除ルール編集' : '削除ルール追加'}
-          </Typography>
-
-          <Stack spacing={2}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <TextField
-                type="number"
-                size="small"
-                value={editDaysStr}
-                onChange={(e) => setEditDaysStr(e.target.value)}
-                inputProps={{ min: 1 }}
-                sx={{ width: 80 }}
-              />
-              <Typography variant="body2">日後に自動削除</Typography>
-            </Stack>
-
-            {deleteRule && (
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Switch
-                  size="small"
-                  checked={deleteRule.enabled}
-                  onChange={handleToggle}
-                />
-                <Typography variant="body2">
-                  {deleteRule.enabled ? '有効' : '無効'}
-                </Typography>
-              </Stack>
-            )}
-
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={handleSave}
-              >
-                {deleteRule ? '更新' : '追加'}
-              </Button>
-              {deleteRule && (
-                <>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    color="primary"
-                    onClick={handleExecute}
-                    disabled={executing || !deleteRule.enabled}
-                    startIcon={<PlayArrowIcon />}
-                  >
-                    実行
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    color="error"
-                    onClick={handleRemove}
-                  >
-                    削除
-                  </Button>
-                </>
-              )}
-            </Stack>
-          </Stack>
-        </Box>
-      </Popover>
-    </TableCell>
-  )
-}
-
 export function FilterTable({
   labelGroups,
   onEditFilter,
@@ -314,27 +158,6 @@ export function FilterTable({
   onUpdateDeleteRule,
   onExecuteDeleteRule,
 }: FilterTableProps) {
-  // Feature Detection: 操作方法で判定（画面サイズではなく）
-  const hasCoarsePointer = useMediaQuery('(pointer: coarse)')
-  const cannotHover = useMediaQuery('(hover: none)')
-  const isTouchDevice = navigator.maxTouchPoints > 0
-
-  const shouldShowCardView = hasCoarsePointer || cannotHover || isTouchDevice
-
-  // カード表示（タッチデバイス）
-  if (shouldShowCardView) {
-    return (
-      <FilterCardList
-        labelGroups={labelGroups}
-        onEditFilter={onEditFilter}
-        onDeleteFilter={onDeleteFilter}
-        onUpdateDeleteRule={onUpdateDeleteRule}
-        onExecuteDeleteRule={onExecuteDeleteRule}
-      />
-    )
-  }
-
-  // テーブル表示（マウスデバイス）
   const [columnWidths, setColumnWidths] = useState<ColumnWidths>(loadColumnWidths)
 
   function handleResize(column: keyof ColumnWidths) {

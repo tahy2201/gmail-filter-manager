@@ -29,11 +29,11 @@ export function Modal({ isOpen, onClose, title, children }: Props) {
       fullScreen={isMobile}
       sx={{
         '& .MuiDialog-paper': {
-          width: isMobile ? '100%' : 'auto',
-          maxWidth: isMobile ? '100%' : '600px',
-          m: isMobile ? 0 : 2,
-          height: isMobile ? '100%' : 'auto',
-          maxHeight: isMobile ? '100%' : 'calc(100% - 64px)',
+          ...(!isMobile && {
+            maxWidth: '600px',
+            m: 2,
+            maxHeight: 'calc(100% - 64px)',
+          }),
         },
       }}
     >

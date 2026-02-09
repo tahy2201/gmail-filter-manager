@@ -15,14 +15,3 @@ export function parseConditionItems(v: string): string[] {
   if (v.includes('|')) return v.split('|').map((s) => s.trim()).filter(Boolean)
   return [v]
 }
-
-/**
- * アイコンスロットの共通スタイル
- */
-export const ICON_SLOT_SX = {
-  width: 20,
-  height: 20,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-}

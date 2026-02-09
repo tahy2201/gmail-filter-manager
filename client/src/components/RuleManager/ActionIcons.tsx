@@ -12,47 +12,63 @@ interface ActionIconsProps {
   size?: 'small' | 'medium' | 'large'
 }
 
+const SIZE_CONFIG = {
+  small: { icon: '1.5rem', slot: 30 },
+  medium: { icon: '2.625rem', slot: 54 },
+  large: { icon: '3.75rem', slot: 72 },
+} as const
+
+interface IconSlotProps {
+  visible: boolean
+  title: string
+  icon: React.ReactElement
+  slotSize: number
+}
+
+function IconSlot({ visible, title, icon, slotSize }: IconSlotProps) {
+  return (
+    <Box sx={{ width: slotSize, height: slotSize, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {visible && (
+        <Tooltip title={title}>
+          {icon}
+        </Tooltip>
+      )}
+    </Box>
+  )
+}
+
 /**
  * フィルタのアクションをアイコンで表示
- * - 📧 既読 (shouldMarkAsRead)
- * - ✅ 迷惑メールにしない (shouldNeverSpam)
- * - 📁 アーカイブ (shouldArchive)
- * - ⭐ 重要にしない (shouldNeverMarkAsImportant)
  */
 export function ActionIcons({ action, size = 'small' }: ActionIconsProps) {
-  const iconSize = size === 'large' ? '3.75rem' : size === 'medium' ? '2.625rem' : '1.5rem'
-  const slotSize = size === 'large' ? 72 : size === 'medium' ? 54 : 30
+  const { icon: iconSize, slot: slotSize } = SIZE_CONFIG[size]
 
   return (
     <Box sx={{ display: 'flex', gap: 1.5 }}>
-      <Box sx={{ width: slotSize, height: slotSize, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {action.shouldMarkAsRead && (
-          <Tooltip title="既読にする">
-            <DraftsIcon sx={{ fontSize: iconSize, color: 'primary.main' }} />
-          </Tooltip>
-        )}
-      </Box>
-      <Box sx={{ width: slotSize, height: slotSize, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {action.shouldNeverSpam && (
-          <Tooltip title="迷惑メールにしない">
-            <VerifiedUserIcon sx={{ fontSize: iconSize, color: 'success.main' }} />
-          </Tooltip>
-        )}
-      </Box>
-      <Box sx={{ width: slotSize, height: slotSize, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {action.shouldArchive && (
-          <Tooltip title="アーカイブ">
-            <ArchiveIcon sx={{ fontSize: iconSize, color: 'info.main' }} />
-          </Tooltip>
-        )}
-      </Box>
-      <Box sx={{ width: slotSize, height: slotSize, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {action.shouldNeverMarkAsImportant && (
-          <Tooltip title="重要にしない">
-            <StarBorderIcon sx={{ fontSize: iconSize, color: 'warning.main' }} />
-          </Tooltip>
-        )}
-      </Box>
+      <IconSlot
+        visible={!!action.shouldMarkAsRead}
+        title="既読にする"
+        icon={<DraftsIcon sx={{ fontSize: iconSize, color: 'primary.main' }} />}
+        slotSize={slotSize}
+      />
+      <IconSlot
+        visible={!!action.shouldNeverSpam}
+        title="迷惑メールにしない"
+        icon={<VerifiedUserIcon sx={{ fontSize: iconSize, color: 'success.main' }} />}
+        slotSize={slotSize}
+      />
+      <IconSlot
+        visible={!!action.shouldArchive}
+        title="アーカイブ"
+        icon={<ArchiveIcon sx={{ fontSize: iconSize, color: 'info.main' }} />}
+        slotSize={slotSize}
+      />
+      <IconSlot
+        visible={!!action.shouldNeverMarkAsImportant}
+        title="重要にしない"
+        icon={<StarBorderIcon sx={{ fontSize: iconSize, color: 'warning.main' }} />}
+        slotSize={slotSize}
+      />
     </Box>
   )
 }

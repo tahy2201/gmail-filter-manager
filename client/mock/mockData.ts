@@ -1,8 +1,5 @@
 import type { DeleteRule, EmailPreview, FilterEntry, Label } from '@/types'
 
-/**
- * モックデータ
- */
 export const mockFilters: FilterEntry[] = [
   {
     id: '1',

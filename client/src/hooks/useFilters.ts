@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api as gasApi } from '../services'
 import type { FilterEntry } from '../types'
+import { getErrorMessage } from '../utils/error'
 
 export function useFilters() {
   const [filters, setFilters] = useState<FilterEntry[]>([])
@@ -15,7 +16,7 @@ export function useFilters() {
       const data = await gasApi.getFilters()
       setFilters(data)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to fetch filters')
+      setError(getErrorMessage(e, 'Failed to fetch filters'))
     } finally {
       setLoading(false)
     }
@@ -38,7 +39,7 @@ export function useFilters() {
       return true
     } catch (e) {
       setFilters(previousFilters)
-      setError(e instanceof Error ? e.message : 'Failed to save filters')
+      setError(getErrorMessage(e, 'Failed to save filters'))
       return false
     } finally {
       setSaving(false)
@@ -54,7 +55,7 @@ export function useFilters() {
         await fetchFilters()
         return true
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to import filters')
+        setError(getErrorMessage(e, 'Failed to import filters'))
         return false
       } finally {
         setLoading(false)

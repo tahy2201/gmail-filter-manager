@@ -7,13 +7,10 @@
 import { gasApi } from './gas'
 import { mockGasApi } from '@mock/mockGas'
 
-// 開発環境かどうかを判定
 const isDevelopment = import.meta.env.DEV
 
-// APIを切り替え
 export const api = isDevelopment ? mockGasApi : gasApi
 
-// デバッグ用にログ出力
 if (isDevelopment) {
   console.log('🔧 [DEV MODE] Using Mock API')
 } else {

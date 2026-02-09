@@ -46,7 +46,7 @@ export function ConfirmDialog({
     >
       <DialogTitle
         sx={{
-          fontSize: isMobile ? '1.25rem' : '1.25rem',
+          fontSize: '1.25rem',
           py: isMobile ? 1.5 : 2,
           px: isMobile ? 2 : 3,
         }}
