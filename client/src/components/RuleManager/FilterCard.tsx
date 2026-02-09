@@ -22,6 +22,8 @@ interface FilterCardProps {
 const columFontSize = '18px'
 const valueFontSize = '16px'
 const iconSize = '20px'
+/** タッチターゲットの最小高さ（タップしやすさを確保） */
+const MIN_TOUCH_TARGET_HEIGHT = 60
 
 function ItemSeparator() {
   return <span style={{ color: '#9aa0a6', margin: '0 12px' }}>|</span>
@@ -71,7 +73,7 @@ function MultipleItemsExpandable({ items, maxDisplay }: { items: string[]; maxDi
         <Button
           variant="text"
           onClick={() => setExpanded(false)}
-          sx={{ minWidth: 'auto', px: 3, fontSize: valueFontSize, minHeight: 60 }}
+          sx={{ minWidth: 'auto', px: 3, fontSize: valueFontSize, minHeight: MIN_TOUCH_TARGET_HEIGHT }}
         >
           閉じる
         </Button>
@@ -88,7 +90,7 @@ function MultipleItemsExpandable({ items, maxDisplay }: { items: string[]; maxDi
       <Button
         variant="text"
         onClick={() => setExpanded(true)}
-        sx={{ minWidth: 'auto', px: 3, fontSize: valueFontSize, minHeight: 60 }}
+        sx={{ minWidth: 'auto', px: 3, fontSize: valueFontSize, minHeight: MIN_TOUCH_TARGET_HEIGHT }}
       >
         他{remaining}件
       </Button>

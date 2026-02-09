@@ -21,20 +21,28 @@ const STORAGE_KEYS = {
   TRIGGER: 'mock_trigger',
 }
 
-// LocalStorageからデータを取得
+// LocalStorageからデータを取得（パース失敗時はデフォルト値にフォールバック）
+function getStored<T>(key: string, fallback: T): T {
+  try {
+    const stored = localStorage.getItem(key)
+    if (!stored) return fallback
+    return JSON.parse(stored) as T
+  } catch (e) {
+    console.warn(`[Mock API] Failed to parse ${key}, using defaults`, e)
+    return fallback
+  }
+}
+
 function getStoredFilters(): FilterEntry[] {
-  const stored = localStorage.getItem(STORAGE_KEYS.FILTERS)
-  return stored ? JSON.parse(stored) : mockFilters
+  return getStored(STORAGE_KEYS.FILTERS, mockFilters)
 }
 
 function getStoredDeleteRules(): DeleteRule[] {
-  const stored = localStorage.getItem(STORAGE_KEYS.DELETE_RULES)
-  return stored ? JSON.parse(stored) : mockDeleteRules
+  return getStored(STORAGE_KEYS.DELETE_RULES, mockDeleteRules)
 }
 
 function getStoredTrigger(): TriggerStatus {
-  const stored = localStorage.getItem(STORAGE_KEYS.TRIGGER)
-  return stored ? JSON.parse(stored) : { enabled: false, hour: null }
+  return getStored(STORAGE_KEYS.TRIGGER, { enabled: false, hour: null })
 }
 
 // LocalStorageにデータを保存

@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import {
   Alert, Box, CircularProgress, LinearProgress, Snackbar,
-  useMediaQuery,
 } from '@mui/material'
 import { useDeleteRules } from '../../hooks/useDeleteRules'
 import { useFilters } from '../../hooks/useFilters'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { useLabelGroups } from '../../hooks/useLabelGroups'
 import { useLabels } from '../../hooks/useLabels'
 import { api as gasApi } from '../../services'
@@ -17,10 +17,7 @@ import { FilterTable } from './FilterTable'
 import { ToolbarLayout } from './ToolbarLayout'
 
 export function RuleManager() {
-  const hasCoarsePointer = useMediaQuery('(pointer: coarse)')
-  const cannotHover = useMediaQuery('(hover: none)')
-  const isTouchDevice = navigator.maxTouchPoints > 0
-  const isMobile = hasCoarsePointer || cannotHover || isTouchDevice
+  const isMobile = useIsMobile()
 
   const { filters, loading: filtersLoading, saving, error: filtersError, addFilter, updateFilter, deleteFilter } = useFilters()
   const { labels } = useLabels()
