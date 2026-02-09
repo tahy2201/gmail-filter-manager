@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { gasApi } from '../services/gas'
+import { api as gasApi } from '../services'
 import type { Label } from '../types'
+import { getErrorMessage } from '../utils/error'
 
 export function useLabels() {
   const [labels, setLabels] = useState<Label[]>([])
@@ -14,7 +15,7 @@ export function useLabels() {
       const data = await gasApi.getLabels()
       setLabels(data)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to fetch labels')
+      setError(getErrorMessage(e, 'Failed to fetch labels'))
     } finally {
       setLoading(false)
     }

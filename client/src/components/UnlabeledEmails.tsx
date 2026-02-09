@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 import { Search as SearchIcon } from '@mui/icons-material'
-import { gasApi } from '../services/gas'
+import { api as gasApi } from '../services'
 import type { EmailPreview } from '../types'
 
 export function UnlabeledEmails() {
@@ -21,7 +21,7 @@ export function UnlabeledEmails() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -37,12 +37,12 @@ export function UnlabeledEmails() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   // 初回マウント時に自動検索
   useEffect(() => {
     handleSearch()
-  }, [])
+  }, [handleSearch])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)' }}>

@@ -4,6 +4,8 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { Close as CloseIcon } from '@mui/icons-material'
 
@@ -15,24 +17,53 @@ interface Props {
 }
 
 export function Modal({ isOpen, onClose, title, children }: Props) {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+
   return (
     <Dialog
       open={isOpen}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
+      fullScreen={isMobile}
+      sx={{
+        '& .MuiDialog-paper': {
+          ...(!isMobile && {
+            maxWidth: '600px',
+            m: 2,
+            maxHeight: 'calc(100% - 64px)',
+          }),
+        },
+      }}
     >
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <DialogTitle
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: isMobile ? '1.25rem' : '1.5rem',
+          py: isMobile ? 1.5 : 2,
+          px: isMobile ? 2 : 3,
+        }}
+      >
         {title}
         <IconButton
           aria-label="閉じる"
           onClick={onClose}
-          size="small"
+          size={isMobile ? 'medium' : 'small'}
         >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent
+        dividers
+        sx={{
+          p: isMobile ? 1.5 : 3,
+          overflowX: 'hidden',
+          overflowY: 'auto',
+        }}
+      >
         {children}
       </DialogContent>
     </Dialog>

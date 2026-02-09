@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { gasApi } from '../services/gas'
+import { api as gasApi } from '../services'
 import type { TriggerStatus } from '../types'
 import { getErrorMessage } from '../utils/error'
 

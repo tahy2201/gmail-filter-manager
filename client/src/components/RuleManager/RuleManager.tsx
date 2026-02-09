@@ -1,28 +1,31 @@
 import { useMemo, useState } from 'react'
 import {
-  Alert, Box, Button, CircularProgress, FormControl, InputAdornment, InputLabel,
-  LinearProgress, MenuItem, Select, Snackbar, Stack, TextField, Typography,
+  Alert, Box, CircularProgress, LinearProgress, Snackbar,
 } from '@mui/material'
-import { Add as AddIcon, Search as SearchIcon } from '@mui/icons-material'
 import { useDeleteRules } from '../../hooks/useDeleteRules'
 import { useFilters } from '../../hooks/useFilters'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { useLabelGroups } from '../../hooks/useLabelGroups'
 import { useLabels } from '../../hooks/useLabels'
-import { gasApi } from '../../services/gas'
+import { api as gasApi } from '../../services'
 import type { DeleteRule, FilterEntry } from '../../types'
 import { ConfirmDialog } from '../ConfirmDialog'
-import { DeleteSchedule } from '../DeleteSchedule'
 import { FilterEditForm } from '../FilterEditForm'
 import { Modal } from '../Modal'
+import { FilterCardList } from './FilterCardList'
 import { FilterTable } from './FilterTable'
+import { ToolbarLayout } from './ToolbarLayout'
 
 export function RuleManager() {
+  const isMobile = useIsMobile()
+
   const { filters, loading: filtersLoading, saving, error: filtersError, addFilter, updateFilter, deleteFilter } = useFilters()
   const { labels } = useLabels()
   const { rules: deleteRules, loading: rulesLoading, error: rulesError, saveRules, executeRule } = useDeleteRules()
 
   const [search, setSearch] = useState('')
   const [labelFilter, setLabelFilter] = useState('')
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
   const [editingFilter, setEditingFilter] = useState<FilterEntry | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [deletingFilterId, setDeletingFilterId] = useState<string | null>(null)
@@ -155,84 +158,37 @@ export function RuleManager() {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)' }}>
       {saving && <LinearProgress sx={{ position: 'absolute', top: 0, left: 0, right: 0 }} />}
 
-      <Stack
-        direction="row"
-        spacing={1}
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ mb: 1, width: '100%' }}
-      >
-        <Stack direction="row" spacing={1} alignItems="center">
-          <TextField
-            size="small"
-            placeholder="検索..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            sx={{ width: 150 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" sx={{ color: 'text.disabled' }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel id="label-filter-label">ラベル</InputLabel>
-            <Select
-              labelId="label-filter-label"
-              value={labelFilter}
-              onChange={(e) => setLabelFilter(e.target.value)}
-              label="ラベル"
-            >
-              <MenuItem value="">すべて</MenuItem>
-              {labelOptions.map((l) => (
-                <MenuItem key={l} value={l}>
-                  {l}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Typography variant="caption" color="text.secondary">
-            {filteredFilters.length} / {filters.length} 件
-          </Typography>
-        </Stack>
-
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<AddIcon />}
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            新規
-          </Button>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              px: 1,
-              py: 0.5,
-              bgcolor: 'grey.50',
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: 'grey.200',
-            }}
-          >
-            <DeleteSchedule />
-          </Box>
-        </Stack>
-      </Stack>
+      <ToolbarLayout
+        isMobile={isMobile}
+        search={search}
+        onSearchChange={setSearch}
+        labelFilter={labelFilter}
+        onLabelFilterChange={setLabelFilter}
+        labelOptions={labelOptions}
+        filterCount={`${filteredFilters.length} / ${filters.length} 件`}
+        isSearchExpanded={isSearchExpanded}
+        onToggleSearch={() => setIsSearchExpanded(!isSearchExpanded)}
+        onCreateNew={() => setIsCreateModalOpen(true)}
+      />
 
       <Box sx={{ flex: 1, overflow: 'hidden' }}>
-        <FilterTable
-          labelGroups={labelGroups}
-          onEditFilter={setEditingFilter}
-          onDeleteFilter={setDeletingFilterId}
-          onUpdateDeleteRule={handleUpdateDeleteRule}
-          onExecuteDeleteRule={handleExecuteDeleteRule}
-        />
+        {isMobile ? (
+          <FilterCardList
+            labelGroups={labelGroups}
+            onEditFilter={setEditingFilter}
+            onDeleteFilter={setDeletingFilterId}
+            onUpdateDeleteRule={handleUpdateDeleteRule}
+            onExecuteDeleteRule={handleExecuteDeleteRule}
+          />
+        ) : (
+          <FilterTable
+            labelGroups={labelGroups}
+            onEditFilter={setEditingFilter}
+            onDeleteFilter={setDeletingFilterId}
+            onUpdateDeleteRule={handleUpdateDeleteRule}
+            onExecuteDeleteRule={handleExecuteDeleteRule}
+          />
+        )}
       </Box>
 
       <Modal
