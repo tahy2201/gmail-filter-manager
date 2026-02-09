@@ -9,23 +9,21 @@
  * @returns {Object} セットアップ結果
  */
 function setupDailyDeleteTrigger(hour) {
-  const triggers = ScriptApp.getProjectTriggers()
-  for (const trigger of triggers) {
-    if (trigger.getHandlerFunction() === 'runScheduledDeleteRules') {
-      ScriptApp.deleteTrigger(trigger)
-    }
-  }
+  // 既存の自分のトリガーを削除
+  removeDailyDeleteTrigger()
 
   const triggerHour = hour ?? 3
 
-  ScriptApp.newTrigger('runScheduledDeleteRules')
+  const trigger = ScriptApp.newTrigger('runScheduledDeleteRules')
     .timeBased()
     .atHour(triggerHour)
     .everyDays(1)
     .inTimezone('Asia/Tokyo')
     .create()
 
-  PropertiesService.getScriptProperties().setProperty('DELETE_TRIGGER_HOUR', String(triggerHour))
+  const userProps = PropertiesService.getUserProperties()
+  userProps.setProperty('DELETE_TRIGGER_ID', trigger.getUniqueId())
+  userProps.setProperty('DELETE_TRIGGER_HOUR', String(triggerHour))
 
   console.log(`Daily delete trigger set for ${triggerHour}:00 JST`)
   addHistory('SETUP_TRIGGER', 'DeleteTrigger', `Scheduled daily at ${triggerHour}:00 JST`)
@@ -37,17 +35,23 @@ function setupDailyDeleteTrigger(hour) {
  * @returns {Object} 削除結果
  */
 function removeDailyDeleteTrigger() {
-  const triggers = ScriptApp.getProjectTriggers()
+  const userProps = PropertiesService.getUserProperties()
+  const savedTriggerId = userProps.getProperty('DELETE_TRIGGER_ID')
   let removed = false
 
-  for (const trigger of triggers) {
-    if (trigger.getHandlerFunction() === 'runScheduledDeleteRules') {
-      ScriptApp.deleteTrigger(trigger)
-      removed = true
+  if (savedTriggerId) {
+    const triggers = ScriptApp.getProjectTriggers()
+    for (const trigger of triggers) {
+      if (trigger.getUniqueId() === savedTriggerId) {
+        ScriptApp.deleteTrigger(trigger)
+        removed = true
+        break
+      }
     }
   }
 
-  PropertiesService.getScriptProperties().deleteProperty('DELETE_TRIGGER_HOUR')
+  userProps.deleteProperty('DELETE_TRIGGER_ID')
+  userProps.deleteProperty('DELETE_TRIGGER_HOUR')
 
   console.log('Daily delete trigger removed')
   if (removed) {
@@ -61,17 +65,25 @@ function removeDailyDeleteTrigger() {
  * @returns {Object} トリガー状態
  */
 function getDeleteTriggerStatus() {
-  const triggers = ScriptApp.getProjectTriggers()
+  const userProps = PropertiesService.getUserProperties()
+  const savedTriggerId = userProps.getProperty('DELETE_TRIGGER_ID')
 
-  for (const trigger of triggers) {
-    if (trigger.getHandlerFunction() === 'runScheduledDeleteRules') {
-      const savedHour = PropertiesService.getScriptProperties().getProperty('DELETE_TRIGGER_HOUR')
-      const hour = savedHour ? Number(savedHour) : 3
-      return {
-        enabled: true,
-        hour: isNaN(hour) ? 3 : hour
+  if (savedTriggerId) {
+    const triggers = ScriptApp.getProjectTriggers()
+    for (const trigger of triggers) {
+      if (trigger.getUniqueId() === savedTriggerId) {
+        const savedHour = userProps.getProperty('DELETE_TRIGGER_HOUR')
+        const hour = savedHour ? Number(savedHour) : 3
+        return {
+          enabled: true,
+          hour: isNaN(hour) ? 3 : hour
+        }
       }
     }
+    // トリガーが存在しない場合はプロパティをクリーンアップ
+    userProps.deleteProperty('DELETE_TRIGGER_ID')
+    userProps.deleteProperty('DELETE_TRIGGER_HOUR')
   }
+
   return { enabled: false, hour: null }
 }

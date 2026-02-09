@@ -4,7 +4,7 @@ const DELETE_RULES_SHEET_NAME = 'DeleteRules'
 const HISTORY_SHEET_NAME = 'History'
 
 function getOrCreateSpreadsheet() {
-  const props = PropertiesService.getScriptProperties()
+  const props = PropertiesService.getUserProperties()
   let spreadsheetId = props.getProperty(SPREADSHEET_ID_KEY)
 
   if (spreadsheetId) {
