@@ -109,6 +109,16 @@ function getSpreadsheetUrl() {
 function updateSpreadsheetId(newSpreadsheetId) {
   // 新しいIDでスプレッドシートを開けるか検証（開けなければ例外がthrowされる）
   const ss = SpreadsheetApp.openById(newSpreadsheetId)
+
+  // 必須シートの存在確認
+  const requiredSheets = [FILTERS_SHEET_NAME, DELETE_RULES_SHEET_NAME, HISTORY_SHEET_NAME]
+  const missingSheets = requiredSheets.filter(function (name) {
+    return !ss.getSheetByName(name)
+  })
+  if (missingSheets.length > 0) {
+    throw new Error('必須シートが見つかりません: ' + missingSheets.join(', '))
+  }
+
   // 成功したらUserPropertiesを更新
   PropertiesService.getUserProperties().setProperty(SPREADSHEET_ID_KEY, newSpreadsheetId)
   return ss

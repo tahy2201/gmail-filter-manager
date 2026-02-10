@@ -19,8 +19,16 @@ export function SettingsPanel() {
   const [inputId, setInputId] = useState('')
 
   const handleUpdate = async () => {
-    if (!inputId.trim()) return
-    const success = await updateSpreadsheetId(inputId.trim())
+    const trimmedId = inputId.trim()
+    if (!trimmedId) return
+
+    // スプレッドシートIDの基本的な形式チェック（英数字とアンダースコア、ハイフン）
+    if (!/^[a-zA-Z0-9_-]+$/.test(trimmedId)) {
+      clearMessages()
+      return
+    }
+
+    const success = await updateSpreadsheetId(trimmedId)
     if (success) {
       setInputId('')
     }

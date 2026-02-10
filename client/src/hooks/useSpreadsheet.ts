@@ -34,6 +34,7 @@ export function useSpreadsheet() {
       const result = await gasApi.updateSpreadsheetReference(spreadsheetId)
       setUrl(result.url)
       setSuccessMessage('スプレッドシートの参照先を更新しました')
+      setTimeout(() => setSuccessMessage(null), 3000)
       return true
     } catch (e) {
       setError(getErrorMessage(e, 'Failed to update spreadsheet reference'))

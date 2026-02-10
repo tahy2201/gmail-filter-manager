@@ -43,7 +43,7 @@ function updateSpreadsheetReference(spreadsheetId) {
     if (!spreadsheetId || typeof spreadsheetId !== 'string') {
       throw new Error('スプレッドシートIDが指定されていません')
     }
-    const ss = updateSpreadsheetId(spreadsheetId.trim())
+    const ss = updateSpreadsheetId(spreadsheetId)
     return { url: ss.getUrl() }
   } catch (error) {
     console.error('Error updating spreadsheet reference:', error)
