@@ -171,33 +171,46 @@ function createFilterInGmail(filterEntry) {
   const created = Gmail.Users.Settings.Filters.create(gmailFilter, 'me')
   const { idToName } = buildLabelMap()
 
-  addHistory('CREATE_FILTER', filterEntry.action.label || 'N/A', `Created filter ${created.id}`)
+  addHistory(
+    'CREATE_FILTER',
+    filterEntry.action.label || '(ラベルなし)',
+    `Created filter ${created.id}`
+  )
 
   return normalizeGmailFilter(created, idToName)
 }
 
 /**
- * Gmail のフィルタを更新（delete + create）
+ * Gmail のフィルタを更新（create → delete の順で実行）
+ * Gmail API にはフィルタの update がないため、新フィルタを先に作成してから旧フィルタを削除する。
+ * create を先にすることで、エラー時にフィルタが失われるリスクを回避する。
  * @param {string} filterId - 既存の Gmail フィルタ ID
  * @param {Object} filterEntry - 更新後のアプリ形式フィルタ
  * @returns {Object} 更新されたフィルタ（新 Gmail ID 付きアプリ形式）
  */
 function updateFilterInGmail(filterId, filterEntry) {
-  // Gmail API にはフィルタの update がないため、delete + create で対応
-  Gmail.Users.Settings.Filters.remove('me', filterId)
-
   const gmailFilter = buildGmailFilter(filterEntry)
 
   if (!hasValidCriteria(gmailFilter)) {
     throw new Error('フィルタ条件が空です')
   }
 
+  // 先に新フィルタを作成（失敗しても旧フィルタは残る）
   const created = Gmail.Users.Settings.Filters.create(gmailFilter, 'me')
+
+  // 新フィルタ作成成功後に旧フィルタを削除
+  try {
+    Gmail.Users.Settings.Filters.remove('me', filterId)
+  } catch (e) {
+    // 旧フィルタ削除失敗は警告のみ（新フィルタは作成済みなので致命的ではない）
+    console.warn(`旧フィルタの削除に失敗（重複が残る可能性あり）: ${filterId}`, e)
+  }
+
   const { idToName } = buildLabelMap()
 
   addHistory(
     'UPDATE_FILTER',
-    filterEntry.action.label || 'N/A',
+    filterEntry.action.label || '(ラベルなし)',
     `Updated filter ${filterId} → ${created.id}`
   )
 
@@ -211,7 +224,7 @@ function updateFilterInGmail(filterId, filterEntry) {
  */
 function deleteFilterFromGmail(filterId) {
   Gmail.Users.Settings.Filters.remove('me', filterId)
-  addHistory('DELETE_FILTER', 'N/A', `Deleted filter ${filterId}`)
+  addHistory('DELETE_FILTER', '(ラベルなし)', `Deleted filter ${filterId}`)
   return { success: true }
 }
 

@@ -75,22 +75,26 @@ function migrateDeleteRules() {
   }
 
   // 結果をログ出力
-  console.log('移行完了: ' + newData.length + ' 件')
+  console.log('=== 移行結果 ===')
+  console.log('移行成功: ' + newData.length + ' 件')
+  console.log('スキップ: ' + warnings.length + ' 件')
   if (warnings.length > 0) {
-    console.log('警告:')
+    console.warn('⚠ 以下のルールはGmailにラベルが存在しないためスキップされました:')
     for (let j = 0; j < warnings.length; j++) {
-      console.log('  - ' + warnings[j])
+      console.warn('  - ' + warnings[j])
     }
+    console.warn('⚠ スキップされたルールは手動でDeleteRulesシートに追加してください')
   }
 
   addHistory(
     'MIGRATE',
     'DeleteRules',
-    '3列→4列移行: ' + newData.length + '件 (警告: ' + warnings.length + '件)'
+    '3列→4列移行: ' + newData.length + '件 (スキップ: ' + warnings.length + '件)'
   )
 
   return {
     migrated: newData.length,
+    skipped: warnings.length,
     warnings: warnings
   }
 }
