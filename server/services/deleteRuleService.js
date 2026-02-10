@@ -15,7 +15,7 @@ function getDeleteRulesFromStorage() {
 
   if (lastRow <= 1) return []
 
-  const data = sheet.getRange(2, 1, lastRow - 1, 3).getValues()
+  const data = sheet.getRange(2, 1, lastRow - 1, 4).getValues()
   return rowsToDeleteRules(data)
 }
 
@@ -29,12 +29,12 @@ function saveDeleteRulesToStorage(rules) {
   const lastRow = sheet.getLastRow()
 
   if (lastRow > 1) {
-    sheet.getRange(2, 1, lastRow - 1, 3).clearContent()
+    sheet.getRange(2, 1, lastRow - 1, 4).clearContent()
   }
 
   if (rules.length > 0) {
     const data = deleteRulesToRows(rules)
-    sheet.getRange(2, 1, data.length, 3).setValues(data)
+    sheet.getRange(2, 1, data.length, 4).setValues(data)
   }
 
   addHistory('SAVE_DELETE_RULES', 'DeleteRules', `Saved ${rules.length} rules`)
@@ -43,11 +43,19 @@ function saveDeleteRulesToStorage(rules) {
 
 /**
  * 指定ラベルの古いメールを削除
- * @param {string} labelName - ラベル名
+ * @param {string} labelId - Gmail ラベル ID
  * @param {number} days - 経過日数
  * @returns {Object} 削除結果
  */
-function executeDeleteByLabel(labelName, days) {
+function executeDeleteByLabel(labelId, days) {
+  // labelId から現在のラベル名を解決
+  const { idToName } = buildLabelMap()
+  const labelName = idToName[labelId]
+
+  if (!labelName) {
+    throw new Error('ラベルが見つかりません: ' + labelId)
+  }
+
   const query = `older_than:${days}d -is:important label:${labelName}`
   const threads = GmailApp.search(query)
 
@@ -76,7 +84,7 @@ function executeAllDeleteRules() {
 
   for (const rule of rules) {
     if (!rule.enabled) continue
-    const result = executeDeleteByLabel(rule.labelName, rule.delayDays)
+    const result = executeDeleteByLabel(rule.labelId, rule.delayDays)
     results.push({
       label: rule.labelName,
       days: rule.delayDays,

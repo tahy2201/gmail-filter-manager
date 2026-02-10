@@ -1,7 +1,6 @@
 import type {
   DeleteRule,
   EmailPreview,
-  FilterDiffResult,
   FilterEntry,
   HistoryEntry,
   Label,
@@ -21,19 +20,18 @@ interface GasRunner {
   withSuccessHandler: (callback: (result: unknown) => void) => GasRunner
   withFailureHandler: (callback: (error: Error) => void) => GasRunner
   getFilters: () => void
-  saveFilters: (filters: FilterEntry[]) => void
-  importFiltersXml: (xml: string) => void
-  applyFiltersToGmail: () => void
+  createFilter: (filterEntry: Omit<FilterEntry, 'id'>) => void
+  updateFilter: (filterId: string, filterEntry: Omit<FilterEntry, 'id'>) => void
+  deleteFilter: (filterId: string) => void
   searchEmails: (query: string, max: number) => void
   getLabels: () => void
   getDeleteRules: () => void
   saveDeleteRules: (rules: DeleteRule[]) => void
-  executeDeleteRule: (labelName: string, days: number) => void
+  executeDeleteRule: (labelId: string, days: number) => void
   getCurrentUser: () => void
   getUnfilteredEmails: (max: number) => void
   getDataSpreadsheetUrl: () => void
   setup: () => void
-  applyFilterDiff: (dryRun: boolean) => void
   getTriggerStatus: () => void
   setupDeleteTrigger: (hour: number) => void
   removeDeleteTrigger: () => void
@@ -59,14 +57,14 @@ function runGasFunction<T>(
 export const gasApi = {
   getFilters: (): Promise<FilterEntry[]> => runGasFunction('getFilters'),
 
-  saveFilters: (filters: FilterEntry[]): Promise<{ success: boolean; count: number }> =>
-    runGasFunction('saveFilters', filters),
+  createFilter: (filter: Omit<FilterEntry, 'id'>): Promise<FilterEntry> =>
+    runGasFunction('createFilter', filter),
 
-  importFiltersXml: (xml: string): Promise<{ success: boolean; count: number }> =>
-    runGasFunction('importFiltersXml', xml),
+  updateFilter: (filterId: string, filter: Omit<FilterEntry, 'id'>): Promise<FilterEntry> =>
+    runGasFunction('updateFilter', filterId, filter),
 
-  applyFiltersToGmail: (): Promise<{ success: boolean; applied: number; total: number }> =>
-    runGasFunction('applyFiltersToGmail'),
+  deleteFilter: (filterId: string): Promise<{ success: boolean }> =>
+    runGasFunction('deleteFilter', filterId),
 
   searchEmails: (query: string, max = 50): Promise<EmailPreview[]> =>
     runGasFunction('searchEmails', query, max),
@@ -78,8 +76,8 @@ export const gasApi = {
   saveDeleteRules: (rules: DeleteRule[]): Promise<{ success: boolean }> =>
     runGasFunction('saveDeleteRules', rules),
 
-  executeDeleteRule: (labelName: string, days: number): Promise<{ deleted: number }> =>
-    runGasFunction('executeDeleteRule', labelName, days),
+  executeDeleteRule: (labelId: string, days: number): Promise<{ deleted: number }> =>
+    runGasFunction('executeDeleteRule', labelId, days),
 
   getCurrentUser: (): Promise<{ email: string }> => runGasFunction('getCurrentUser'),
 
@@ -91,9 +89,6 @@ export const gasApi = {
 
   setup: (): Promise<{ spreadsheetUrl: string; spreadsheetId: string }> =>
     runGasFunction('setup'),
-
-  applyFilterDiff: (dryRun = false): Promise<FilterDiffResult> =>
-    runGasFunction('applyFilterDiff', dryRun),
 
   applyToExistingMessages: (filter: {
     criteria: FilterEntry['criteria']

@@ -1,7 +1,6 @@
 import type {
   DeleteRule,
   EmailPreview,
-  FilterDiffResult,
   FilterEntry,
   HistoryEntry,
   Label,
@@ -69,22 +68,33 @@ export const mockGasApi = {
     return delay(getStoredFilters())
   },
 
-  saveFilters: async (filters: FilterEntry[]): Promise<{ success: boolean; count: number }> => {
-    console.log('[Mock API] saveFilters', filters)
-    saveFiltersToStorage(filters)
-    return delay({ success: true, count: filters.length })
-  },
-
-  importFiltersXml: async (xml: string): Promise<{ success: boolean; count: number }> => {
-    console.log('[Mock API] importFiltersXml', xml.length, 'chars')
-    // XMLパースは省略（実装不要）
-    return delay({ success: true, count: 0 })
-  },
-
-  applyFiltersToGmail: async (): Promise<{ success: boolean; applied: number; total: number }> => {
-    console.log('[Mock API] applyFiltersToGmail')
+  createFilter: async (filter: Omit<FilterEntry, 'id'>): Promise<FilterEntry> => {
+    console.log('[Mock API] createFilter', filter)
+    const newFilter: FilterEntry = {
+      ...filter,
+      id: `mock_filter_${Date.now()}`,
+    }
     const filters = getStoredFilters()
-    return delay({ success: true, applied: filters.length, total: filters.length })
+    saveFiltersToStorage([...filters, newFilter])
+    return delay(newFilter)
+  },
+
+  updateFilter: async (filterId: string, filter: Omit<FilterEntry, 'id'>): Promise<FilterEntry> => {
+    console.log('[Mock API] updateFilter', filterId, filter)
+    const newFilter: FilterEntry = {
+      ...filter,
+      id: `mock_filter_${Date.now()}`,
+    }
+    const filters = getStoredFilters()
+    saveFiltersToStorage(filters.map((f) => (f.id === filterId ? newFilter : f)))
+    return delay(newFilter)
+  },
+
+  deleteFilter: async (filterId: string): Promise<{ success: boolean }> => {
+    console.log('[Mock API] deleteFilter', filterId)
+    const filters = getStoredFilters()
+    saveFiltersToStorage(filters.filter((f) => f.id !== filterId))
+    return delay({ success: true })
   },
 
   searchEmails: async (query: string, max = 50): Promise<EmailPreview[]> => {
@@ -113,8 +123,8 @@ export const mockGasApi = {
     return delay({ success: true })
   },
 
-  executeDeleteRule: async (labelName: string, days: number): Promise<{ deleted: number }> => {
-    console.log('[Mock API] executeDeleteRule', labelName, days)
+  executeDeleteRule: async (labelId: string, days: number): Promise<{ deleted: number }> => {
+    console.log('[Mock API] executeDeleteRule', labelId, days)
     // ランダムな削除数を返す
     const deleted = Math.floor(Math.random() * 50) + 1
     return delay({ deleted }, 1000)
@@ -140,18 +150,6 @@ export const mockGasApi = {
     return delay({
       spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/mock-spreadsheet-id',
       spreadsheetId: 'mock-spreadsheet-id',
-    })
-  },
-
-  applyFilterDiff: async (dryRun = false): Promise<FilterDiffResult> => {
-    console.log('[Mock API] applyFilterDiff', dryRun)
-    return delay({
-      created: dryRun ? 0 : 3,
-      deleted: dryRun ? 0 : 1,
-      errors: [],
-      dryRun,
-      wouldCreate: dryRun ? 3 : undefined,
-      wouldDelete: dryRun ? 1 : undefined,
     })
   },
 

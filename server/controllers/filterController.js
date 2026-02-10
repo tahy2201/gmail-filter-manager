@@ -1,15 +1,15 @@
 /**
  * フィルタ管理Controller
- * フィルタの取得・保存・インポート・Gmail適用を担当
+ * Gmail API 経由でのフィルタ CRUD を担当
  */
 
 /**
- * スプレッドシートからフィルタを取得
+ * Gmail からフィルタ一覧を取得
  * @returns {Array} フィルタ一覧
  */
 function getFilters() {
   try {
-    return getFiltersFromSpreadsheet()
+    return getFiltersFromGmail()
   } catch (error) {
     console.error('Error getting filters:', error)
     throw new Error(`Failed to get filters: ${error.message}`)
@@ -17,70 +17,45 @@ function getFilters() {
 }
 
 /**
- * フィルタをスプレッドシートに保存
- * @param {Array} filters フィルタ一覧
- * @returns {Object} 保存結果
+ * Gmail にフィルタを作成
+ * @param {Object} filterEntry フィルタ設定
+ * @returns {Object} 作成されたフィルタ（Gmail ID付き）
  */
-function saveFilters(filters) {
+function createFilter(filterEntry) {
   try {
-    return saveFiltersToSpreadsheet(filters)
+    return createFilterInGmail(filterEntry)
   } catch (error) {
-    console.error('Error saving filters:', error)
-    throw new Error(`Failed to save filters: ${error.message}`)
+    console.error('Error creating filter:', error)
+    throw new Error(`Failed to create filter: ${error.message}`)
   }
 }
 
 /**
- * XMLからフィルタをインポート
- * @param {string} xml フィルタXML
- * @returns {Object} インポート結果
+ * Gmail のフィルタを更新
+ * @param {string} filterId Gmail フィルタ ID
+ * @param {Object} filterEntry 更新後のフィルタ設定
+ * @returns {Object} 更新されたフィルタ（新Gmail ID付き）
  */
-function importFiltersXml(xml) {
+function updateFilter(filterId, filterEntry) {
   try {
-    return importFiltersFromXml(xml)
+    return updateFilterInGmail(filterId, filterEntry)
   } catch (error) {
-    console.error('Error importing filters:', error)
-    throw new Error(`Failed to import filters: ${error.message}`)
+    console.error('Error updating filter:', error)
+    throw new Error(`Failed to update filter: ${error.message}`)
   }
 }
 
 /**
- * スプレッドシートのフィルタをGmailに適用
- * @returns {Object} 適用結果
+ * Gmail からフィルタを削除
+ * @param {string} filterId Gmail フィルタ ID
+ * @returns {Object} 削除結果
  */
-function applyFiltersToGmail() {
+function deleteFilter(filterId) {
   try {
-    return applyFilters()
+    return deleteFilterFromGmail(filterId)
   } catch (error) {
-    console.error('Error applying filters:', error)
-    throw new Error(`Failed to apply filters: ${error.message}`)
-  }
-}
-
-/**
- * GmailとスプレッドシートのフィルタDiffをプレビュー
- * @returns {Object} Diff結果
- */
-function previewFilterDiff() {
-  try {
-    return previewFiltersDiff()
-  } catch (error) {
-    console.error('Error previewing filter diff:', error)
-    throw new Error(`Failed to preview filter diff: ${error.message}`)
-  }
-}
-
-/**
- * フィルタの差分をGmailに適用
- * @param {boolean} dryRun ドライランモード
- * @returns {Object} 適用結果
- */
-function applyFilterDiff(dryRun) {
-  try {
-    return applyFiltersDiff(dryRun === true)
-  } catch (error) {
-    console.error('Error applying filter diff:', error)
-    throw new Error(`Failed to apply filter diff: ${error.message}`)
+    console.error('Error deleting filter:', error)
+    throw new Error(`Failed to delete filter: ${error.message}`)
   }
 }
 

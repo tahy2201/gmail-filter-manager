@@ -116,23 +116,23 @@ export function RuleManager() {
     }
   }
 
-  async function handleUpdateDeleteRule(labelName: string, updatedRule: DeleteRule | null) {
+  async function handleUpdateDeleteRule(labelId: string, _labelName: string, updatedRule: DeleteRule | null) {
     if (updatedRule === null) {
-      await saveRules(deleteRules.filter((r) => r.labelName !== labelName))
+      await saveRules(deleteRules.filter((r) => r.labelId !== labelId))
       return
     }
 
-    const exists = deleteRules.some((r) => r.labelName === labelName)
+    const exists = deleteRules.some((r) => r.labelId === labelId)
     if (exists) {
-      await saveRules(deleteRules.map((r) => (r.labelName === labelName ? updatedRule : r)))
+      await saveRules(deleteRules.map((r) => (r.labelId === labelId ? updatedRule : r)))
     } else {
       await saveRules([...deleteRules, updatedRule])
     }
   }
 
-  async function handleExecuteDeleteRule(labelName: string, days: number) {
+  async function handleExecuteDeleteRule(labelId: string, labelName: string, days: number) {
     setSnackbarMessage(`${labelName} の削除を実行中...`)
-    const count = await executeRule(labelName, days)
+    const count = await executeRule(labelId, days)
     if (count >= 0) {
       setSnackbarMessage(`${labelName}: ${count}件のメールを削除しました`)
     } else {

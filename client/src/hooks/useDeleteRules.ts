@@ -40,9 +40,9 @@ export function useDeleteRules() {
     }
   }, [])
 
-  const executeRule = useCallback(async (labelName: string, days: number) => {
+  const executeRule = useCallback(async (labelId: string, days: number) => {
     try {
-      const result = await gasApi.executeDeleteRule(labelName, days)
+      const result = await gasApi.executeDeleteRule(labelId, days)
       return result.deleted
     } catch (e) {
       setError(getErrorMessage(e, 'Failed to execute delete rule'))
