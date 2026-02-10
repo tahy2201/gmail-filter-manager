@@ -44,6 +44,8 @@ gmail-filter-manager/
 │   │   │   └── historyMapper.js     # 履歴変換 (2関数)
 │   │   ├── filterUtils.js   # フィルタユーティリティ (1関数: buildSearchQuery)
 │   │   └── stringUtils.js   # 文字列操作 (2関数: formatDate, truncate)
+│   ├── scripts/             # GASエディタから手動実行するスクリプト
+│   │   └── migration.js     # データ移行（migrateDeleteRules）
 │   └── appsscript.json      # OAuth スコープ設定
 └── package.json
 ```
@@ -57,7 +59,7 @@ gmail-filter-manager/
 ## スプレッドシート構成
 | シート名 | 内容 |
 |----------|------|
-| DeleteRules | 削除ルール（labelName, delayDays, enabled） |
+| DeleteRules | 削除ルール（labelId, labelName, delayDays, enabled） |
 | History | 変更履歴（timestamp, action, target, details） |
 
 ※ フィルタはGmail APIで直接管理。スプレッドシートには保存しない。
@@ -118,6 +120,21 @@ GASエディタ →「デプロイ」→「新しいデプロイ」:
 ### 4. ユーザーの初回アクセス
 - 「このアプリは確認されていません」警告 →「詳細」→「（安全でない）に移動」で承認
 - OAuth同意画面で権限を許可 → スプレッドシートが自動作成される
+
+## 旧仕様からの移行
+
+### 対象
+以前のバージョン（フィルタをスプレッドシートで管理、DeleteRulesが3列形式）を使用中のユーザー。
+
+### 手順
+1. `clasp push --force` で新コードをデプロイ
+2. GASエディタで `migrateDeleteRules()` を実行（DeleteRulesシートを3列→4列に変換）
+3. Webアプリにアクセスして動作確認
+
+### 補足
+- **Filtersシート**: もう使用しないため放置で問題なし（削除しても可）
+- **新規ユーザー**: 移行不要。初回アクセス時にスプレッドシートが新形式で自動作成される
+- `migrateDeleteRules()` は冪等。既に移行済みの場合はスキップされる
 
 ## 注意事項
 - `mailFilters.xml` と `old-prj-delmail/` は `.gitignore` で除外
