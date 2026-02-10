@@ -11,29 +11,44 @@ export default [
         ...googleappsscript.environments.googleappsscript.globals,
         console: 'readonly',
         // Cross-file function references (GAS concatenates all files)
+        // spreadsheetService
         getSheet: 'readonly',
         addHistory: 'readonly',
-        getFiltersFromSpreadsheet: 'readonly',
-        saveFiltersToSpreadsheet: 'readonly',
-        importFiltersFromXml: 'readonly',
-        applyFilters: 'readonly',
-        searchGmailEmails: 'readonly',
-        listGmailLabels: 'readonly',
+        getHistory: 'readonly',
+        getSpreadsheetUrl: 'readonly',
+        getOrCreateSpreadsheet: 'readonly',
+        updateSpreadsheetId: 'readonly',
+        // filterService
+        buildGmailFilter: 'readonly',
+        buildLabelMap: 'readonly',
+        getFiltersFromGmail: 'readonly',
+        createFilterInGmail: 'readonly',
+        updateFilterInGmail: 'readonly',
+        deleteFilterFromGmail: 'readonly',
+        applyFilterToExistingMessages: 'readonly',
+        // deleteRuleService
         getDeleteRulesFromStorage: 'readonly',
         saveDeleteRulesToStorage: 'readonly',
         executeDeleteByLabel: 'readonly',
         executeAllDeleteRules: 'readonly',
+        // emailService
+        searchGmailEmails: 'readonly',
         findUnfilteredEmails: 'readonly',
-        getSpreadsheetUrl: 'readonly',
-        getOrCreateSpreadsheet: 'readonly',
-        buildGmailFilter: 'readonly',
-        previewFiltersDiff: 'readonly',
-        applyFiltersDiff: 'readonly',
-        applyFilterToExistingMessages: 'readonly',
+        // labelService
+        listGmailLabels: 'readonly',
+        getOrCreateLabel: 'readonly',
+        // triggerService
         getDeleteTriggerStatus: 'readonly',
         setupDailyDeleteTrigger: 'readonly',
         removeDailyDeleteTrigger: 'readonly',
-        getHistory: 'readonly'
+        // mappers
+        rowsToDeleteRules: 'readonly',
+        deleteRulesToRows: 'readonly',
+        rowsToHistory: 'readonly',
+        // utils
+        buildSearchQuery: 'readonly',
+        formatDate: 'readonly',
+        truncate: 'readonly'
       }
     },
     rules: {

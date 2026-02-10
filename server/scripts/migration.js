@@ -45,15 +45,15 @@ function migrateDeleteRules() {
   const newData = []
   const warnings = []
 
-  for (var i = 0; i < oldData.length; i++) {
-    var row = oldData[i]
-    var labelName = row[0]
-    var delayDays = row[1]
-    var enabled = row[2]
+  for (let i = 0; i < oldData.length; i++) {
+    const row = oldData[i]
+    const labelName = row[0]
+    const delayDays = row[1]
+    const enabled = row[2]
 
     if (!labelName) continue
 
-    var labelId = nameToId[labelName]
+    const labelId = nameToId[labelName]
     if (!labelId) {
       warnings.push('ラベル "' + labelName + '" が見つかりません（スキップ）')
       continue
@@ -78,12 +78,16 @@ function migrateDeleteRules() {
   console.log('移行完了: ' + newData.length + ' 件')
   if (warnings.length > 0) {
     console.log('警告:')
-    for (var j = 0; j < warnings.length; j++) {
+    for (let j = 0; j < warnings.length; j++) {
       console.log('  - ' + warnings[j])
     }
   }
 
-  addHistory('MIGRATE', 'DeleteRules', '3列→4列移行: ' + newData.length + '件 (警告: ' + warnings.length + '件)')
+  addHistory(
+    'MIGRATE',
+    'DeleteRules',
+    '3列→4列移行: ' + newData.length + '件 (警告: ' + warnings.length + '件)'
+  )
 
   return {
     migrated: newData.length,
