@@ -214,4 +214,9 @@ export const mockGasApi = {
     ]
     return delay(history.slice(0, limit))
   },
+
+  updateSpreadsheetReference: async (spreadsheetId: string): Promise<{ url: string }> => {
+    console.log('[Mock API] updateSpreadsheetReference', spreadsheetId)
+    return delay({ url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}` })
+  },
 }

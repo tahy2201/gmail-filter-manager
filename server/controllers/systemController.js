@@ -34,6 +34,24 @@ function getDataSpreadsheetUrl() {
 }
 
 /**
+ * 参照するスプレッドシートIDを更新
+ * @param {string} spreadsheetId 新しいスプレッドシートID
+ * @returns {Object} 更新後のスプレッドシートURL
+ */
+function updateSpreadsheetReference(spreadsheetId) {
+  try {
+    if (!spreadsheetId || typeof spreadsheetId !== 'string') {
+      throw new Error('スプレッドシートIDが指定されていません')
+    }
+    const ss = updateSpreadsheetId(spreadsheetId)
+    return { url: ss.getUrl() }
+  } catch (error) {
+    console.error('Error updating spreadsheet reference:', error)
+    throw new Error(`Failed to update spreadsheet reference: ${error.message}`)
+  }
+}
+
+/**
  * 初回セットアップ：スプレッドシート作成
  * @returns {Object} セットアップ結果
  */
