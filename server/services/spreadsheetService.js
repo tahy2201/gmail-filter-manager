@@ -105,3 +105,11 @@ function getHistory(limit) {
 function getSpreadsheetUrl() {
   return getOrCreateSpreadsheet().getUrl()
 }
+
+function updateSpreadsheetId(newSpreadsheetId) {
+  // 新しいIDでスプレッドシートを開けるか検証（開けなければ例外がthrowされる）
+  const ss = SpreadsheetApp.openById(newSpreadsheetId)
+  // 成功したらUserPropertiesを更新
+  PropertiesService.getUserProperties().setProperty(SPREADSHEET_ID_KEY, newSpreadsheetId)
+  return ss
+}

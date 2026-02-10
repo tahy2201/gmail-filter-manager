@@ -3,6 +3,7 @@ import { Box, Container, CssBaseline, Tab, Tabs, ThemeProvider, Typography, crea
 import { HistoryPanel } from './components/HistoryPanel'
 import { QueryTester } from './components/QueryTester'
 import { RuleManager } from './components/RuleManager'
+import { SettingsPanel } from './components/SettingsPanel'
 import { UnlabeledEmails } from './components/UnlabeledEmails'
 
 const theme = createTheme({
@@ -44,6 +45,7 @@ function App() {
             <Tab label="クエリテスト" id="tab-1" aria-controls="tabpanel-1" />
             <Tab label="ラベルなし" id="tab-2" aria-controls="tabpanel-2" />
             <Tab label="履歴" id="tab-3" aria-controls="tabpanel-3" />
+            <Tab label="設定" id="tab-4" aria-controls="tabpanel-4" />
           </Tabs>
         </Box>
 
@@ -58,6 +60,9 @@ function App() {
         </TabPanel>
         <TabPanel value={tabValue} index={3}>
           <HistoryPanel />
+        </TabPanel>
+        <TabPanel value={tabValue} index={4}>
+          <SettingsPanel />
         </TabPanel>
       </Container>
     </ThemeProvider>

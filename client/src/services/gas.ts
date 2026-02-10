@@ -38,6 +38,7 @@ interface GasRunner {
   setupDeleteTrigger: (hour: number) => void
   removeDeleteTrigger: () => void
   getDeleteHistory: (limit: number) => void
+  updateSpreadsheetReference: (spreadsheetId: string) => void
 }
 
 function runGasFunction<T>(
@@ -116,4 +117,7 @@ export const gasApi = {
 
   getDeleteHistory: (limit = 50): Promise<HistoryEntry[]> =>
     runGasFunction('getDeleteHistory', limit),
+
+  updateSpreadsheetReference: (spreadsheetId: string): Promise<{ url: string }> =>
+    runGasFunction('updateSpreadsheetReference', spreadsheetId),
 }
