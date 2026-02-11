@@ -5,14 +5,15 @@
 
 /**
  * スプレッドシート行を削除ルールオブジェクトに変換
- * @param {Array} row - スプレッドシートの行 [labelName, delayDays, enabled]
+ * @param {Array} row - スプレッドシートの行 [labelId, labelName, delayDays, enabled]
  * @returns {Object} 削除ルールオブジェクト
  */
 function rowToDeleteRule(row) {
   return {
-    labelName: row[0],
-    delayDays: Number(row[1]) || 30,
-    enabled: row[2] === true || row[2] === 'TRUE'
+    labelId: row[0],
+    labelName: row[1],
+    delayDays: Number(row[2]) || 30,
+    enabled: row[3] === true || row[3] === 'TRUE'
   }
 }
 
@@ -22,7 +23,7 @@ function rowToDeleteRule(row) {
  * @returns {Array} スプレッドシートの行
  */
 function deleteRuleToRow(rule) {
-  return [rule.labelName, rule.delayDays, rule.enabled]
+  return [rule.labelId, rule.labelName, rule.delayDays, rule.enabled]
 }
 
 /**
@@ -33,7 +34,7 @@ function deleteRuleToRow(rule) {
 function rowsToDeleteRules(rows) {
   const rules = []
   for (const row of rows) {
-    if (!row[0]) continue // labelName が空ならスキップ
+    if (!row[0]) continue // labelId が空ならスキップ
     rules.push(rowToDeleteRule(row))
   }
   return rules

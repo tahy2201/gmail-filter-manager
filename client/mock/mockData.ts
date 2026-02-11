@@ -9,6 +9,7 @@ export const mockFilters: FilterEntry[] = [
     },
     action: {
       label: 'GitHub',
+      labelId: 'label_1',
       shouldArchive: true,
       shouldMarkAsRead: true,
     },
@@ -20,6 +21,7 @@ export const mockFilters: FilterEntry[] = [
     },
     action: {
       label: 'Slack',
+      labelId: 'label_2',
       shouldArchive: true,
     },
   },
@@ -31,6 +33,7 @@ export const mockFilters: FilterEntry[] = [
     },
     action: {
       label: 'Google',
+      labelId: 'label_3',
       shouldNeverSpam: true,
     },
   },
@@ -42,6 +45,7 @@ export const mockFilters: FilterEntry[] = [
     },
     action: {
       label: 'Newsletter',
+      labelId: 'label_4',
       shouldArchive: true,
       shouldMarkAsRead: true,
       shouldNeverMarkAsImportant: true,
@@ -55,6 +59,7 @@ export const mockFilters: FilterEntry[] = [
     },
     action: {
       label: 'Support',
+      labelId: 'label_5',
       forwardTo: 'forward@example.com',
     },
   },
@@ -66,6 +71,7 @@ export const mockFilters: FilterEntry[] = [
     },
     action: {
       label: 'Important',
+      labelId: 'label_6',
     },
   },
   {
@@ -75,6 +81,7 @@ export const mockFilters: FilterEntry[] = [
     },
     action: {
       label: 'Social',
+      labelId: 'label_7',
       shouldArchive: true,
       shouldMarkAsRead: true,
     },
@@ -86,6 +93,7 @@ export const mockFilters: FilterEntry[] = [
     },
     action: {
       label: 'Social',
+      labelId: 'label_7',
       shouldArchive: true,
     },
   },
@@ -96,6 +104,7 @@ export const mockFilters: FilterEntry[] = [
     },
     action: {
       label: 'AWS',
+      labelId: 'label_8',
       shouldNeverSpam: true,
     },
   },
@@ -115,9 +124,9 @@ export const mockLabels: Label[] = [
 ]
 
 export const mockDeleteRules: DeleteRule[] = [
-  { labelName: 'GitHub', delayDays: 30, enabled: true },
-  { labelName: 'Newsletter', delayDays: 7, enabled: true },
-  { labelName: 'Social', delayDays: 14, enabled: false },
+  { labelId: 'label_1', labelName: 'GitHub', delayDays: 30, enabled: true },
+  { labelId: 'label_4', labelName: 'Newsletter', delayDays: 7, enabled: true },
+  { labelId: 'label_7', labelName: 'Social', delayDays: 14, enabled: false },
 ]
 
 export const mockEmails: EmailPreview[] = [

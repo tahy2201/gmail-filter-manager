@@ -1,82 +1,96 @@
 /**
  * Gmail Filter Service
- * フィルタの読み込み、保存、Gmail API への適用を担当
+ * Gmail API を直接使用してフィルタの CRUD を担当
  */
 
-const FILTERS_SHEET = 'Filters'
+// 既存メール適用の定数
+const MAX_MESSAGES_PER_PAGE = 500
+const MAX_MESSAGES_TO_PROCESS = 1000
+const BATCH_MODIFY_SIZE = 100
 
 /**
- * スプレッドシートからフィルタを読み込む
- * @returns {Array} フィルタ一覧
+ * Gmail から既存フィルタを取得
+ * @returns {Array} Gmail フィルタ一覧（生の Gmail API 形式）
  */
-function getFiltersFromSpreadsheet() {
-  const sheet = getSheet(FILTERS_SHEET)
-  const lastRow = sheet.getLastRow()
-
-  if (lastRow <= 1) {
-    return []
-  }
-
-  const data = sheet.getRange(2, 1, lastRow - 1, 10).getValues()
-  return rowsToFilters(data)
+function getGmailFilters() {
+  const response = Gmail.Users.Settings.Filters.list('me')
+  return response.filter || []
 }
 
 /**
- * フィルタをスプレッドシートに保存
- * @param {Array} filters - フィルタ一覧
- * @returns {Object} 保存結果
+ * ラベル名 ⇔ ID のマップを構築
+ * @returns {Object} { nameToId: Object, idToName: Object }
  */
-function saveFiltersToSpreadsheet(filters) {
-  const sheet = getSheet(FILTERS_SHEET)
+function buildLabelMap() {
+  const labels = Gmail.Users.Labels.list('me').labels || []
+  const nameToId = {}
+  const idToName = {}
 
-  // 既存データをクリア（ヘッダー以外）
-  const lastRow = sheet.getLastRow()
-  if (lastRow > 1) {
-    sheet.getRange(2, 1, lastRow - 1, 10).clearContent()
+  for (const label of labels) {
+    nameToId[label.name] = label.id
+    idToName[label.id] = label.name
   }
 
-  // 新しいデータを書き込み
-  if (filters.length > 0) {
-    const data = filtersToRows(filters)
-    sheet.getRange(2, 1, data.length, 10).setValues(data)
-  }
-
-  addHistory('SAVE_FILTERS', 'Filters', `Saved ${filters.length} filters`)
-
-  return { success: true, count: filters.length }
+  return { nameToId, idToName }
 }
 
 /**
- * XML からフィルタをインポート
- * @param {string} xml - XML 文字列
- * @returns {Object} インポート結果
+ * Gmail フィルタをアプリ形式に変換
+ * @param {Object} gmailFilter - Gmail API フィルタ
+ * @param {Object} idToName - ラベルID→名前マップ
+ * @returns {Object} アプリ形式のフィルタ
  */
-function importFiltersFromXml(xml) {
-  const filters = parseFiltersXml(xml)
-  return saveFiltersToSpreadsheet(filters)
-}
+function normalizeGmailFilter(gmailFilter, idToName) {
+  const criteria = gmailFilter.criteria || {}
+  const action = gmailFilter.action || {}
 
-/**
- * フィルタを Gmail に適用
- * @returns {Object} 適用結果
- */
-function applyFilters() {
-  const filters = getFiltersFromSpreadsheet()
-  let applied = 0
+  // addLabelIds からユーザーラベルを取得（カテゴリラベルを除外）
+  const addLabelIds = action.addLabelIds || []
+  const userLabelId = addLabelIds.find((lid) => idToName[lid] && !lid.startsWith('CATEGORY_')) || ''
+  const labelName = userLabelId ? idToName[userLabelId] : ''
 
-  for (const filter of filters) {
-    try {
-      const gmailFilter = buildGmailFilter(filter)
-      Gmail.Users.Settings.Filters.create(gmailFilter, 'me')
-      applied++
-    } catch (e) {
-      console.error(`Failed to apply filter ${filter.id}:`, e)
+  // removeLabelIds から各フラグを判定
+  const removeLabelIds = action.removeLabelIds || []
+
+  return {
+    id: gmailFilter.id,
+    criteria: {
+      from: criteria.from || '',
+      to: criteria.to || '',
+      subject: criteria.subject || '',
+      hasTheWord: criteria.query || '',
+      doesNotHaveTheWord: criteria.negatedQuery || ''
+    },
+    action: {
+      label: labelName,
+      labelId: userLabelId,
+      shouldArchive: removeLabelIds.includes('INBOX'),
+      shouldMarkAsRead: removeLabelIds.includes('UNREAD'),
+      shouldNeverSpam: removeLabelIds.includes('SPAM'),
+      forwardTo: action.forward || ''
     }
   }
+}
 
-  addHistory('APPLY_FILTERS', 'Gmail', `Applied ${applied}/${filters.length} filters`)
+/**
+ * フィルタの criteria が有効かチェック
+ * @param {Object} gmailFilter - Gmail API 形式のフィルタ
+ * @returns {boolean} 有効な場合 true
+ */
+function hasValidCriteria(gmailFilter) {
+  const criteria = gmailFilter.criteria
+  return Object.keys(criteria).length > 0 && Object.values(criteria).some((v) => v)
+}
 
-  return { success: true, applied: applied, total: filters.length }
+/**
+ * Gmail 全フィルタを取得しアプリ形式で返す
+ * @returns {Array} アプリ形式のフィルタ一覧
+ */
+function getFiltersFromGmail() {
+  const gmailFilters = getGmailFilters()
+  const { idToName } = buildLabelMap()
+
+  return gmailFilters.map((f) => normalizeGmailFilter(f, idToName))
 }
 
 /**
@@ -112,14 +126,15 @@ function buildGmailFilter(filter) {
     const label = getOrCreateLabel(filter.action.label)
     gmailFilter.action.addLabelIds = [label.id]
   }
-  if (filter.action.shouldArchive) {
-    gmailFilter.action.removeLabelIds = gmailFilter.action.removeLabelIds || []
-    gmailFilter.action.removeLabelIds.push('INBOX')
+
+  const removeLabelIds = []
+  if (filter.action.shouldArchive) removeLabelIds.push('INBOX')
+  if (filter.action.shouldMarkAsRead) removeLabelIds.push('UNREAD')
+  if (filter.action.shouldNeverSpam) removeLabelIds.push('SPAM')
+  if (removeLabelIds.length > 0) {
+    gmailFilter.action.removeLabelIds = removeLabelIds
   }
-  if (filter.action.shouldMarkAsRead) {
-    gmailFilter.action.removeLabelIds = gmailFilter.action.removeLabelIds || []
-    gmailFilter.action.removeLabelIds.push('UNREAD')
-  }
+
   if (filter.action.forwardTo) {
     gmailFilter.action.forward = filter.action.forwardTo
   }
@@ -127,10 +142,77 @@ function buildGmailFilter(filter) {
   return gmailFilter
 }
 
-// 既存メール適用の定数
-const MAX_MESSAGES_PER_PAGE = 500
-const MAX_MESSAGES_TO_PROCESS = 1000
-const BATCH_MODIFY_SIZE = 100
+/**
+ * Gmail にフィルタを作成
+ * @param {Object} filterEntry - アプリ形式のフィルタ
+ * @returns {Object} 作成されたフィルタ（Gmail ID 付きアプリ形式）
+ */
+function createFilterInGmail(filterEntry) {
+  const gmailFilter = buildGmailFilter(filterEntry)
+
+  if (!hasValidCriteria(gmailFilter)) {
+    throw new Error('フィルタ条件が空です')
+  }
+
+  const created = Gmail.Users.Settings.Filters.create(gmailFilter, 'me')
+  const { idToName } = buildLabelMap()
+
+  addHistory(
+    'CREATE_FILTER',
+    filterEntry.action.label || '(ラベルなし)',
+    `Created filter ${created.id}`
+  )
+
+  return normalizeGmailFilter(created, idToName)
+}
+
+/**
+ * Gmail のフィルタを更新（create → delete の順で実行）
+ * Gmail API にはフィルタの update がないため、新フィルタを先に作成してから旧フィルタを削除する。
+ * create を先にすることで、エラー時にフィルタが失われるリスクを回避する。
+ * @param {string} filterId - 既存の Gmail フィルタ ID
+ * @param {Object} filterEntry - 更新後のアプリ形式フィルタ
+ * @returns {Object} 更新されたフィルタ（新 Gmail ID 付きアプリ形式）
+ */
+function updateFilterInGmail(filterId, filterEntry) {
+  const gmailFilter = buildGmailFilter(filterEntry)
+
+  if (!hasValidCriteria(gmailFilter)) {
+    throw new Error('フィルタ条件が空です')
+  }
+
+  // 先に新フィルタを作成（失敗しても旧フィルタは残る）
+  const created = Gmail.Users.Settings.Filters.create(gmailFilter, 'me')
+
+  // 新フィルタ作成成功後に旧フィルタを削除
+  try {
+    Gmail.Users.Settings.Filters.remove('me', filterId)
+  } catch (e) {
+    // 旧フィルタ削除失敗は警告のみ（新フィルタは作成済みなので致命的ではない）
+    console.warn(`旧フィルタの削除に失敗（重複が残る可能性あり）: ${filterId}`, e)
+  }
+
+  const { idToName } = buildLabelMap()
+
+  addHistory(
+    'UPDATE_FILTER',
+    filterEntry.action.label || '(ラベルなし)',
+    `Updated filter ${filterId} → ${created.id}`
+  )
+
+  return normalizeGmailFilter(created, idToName)
+}
+
+/**
+ * Gmail からフィルタを削除
+ * @param {string} filterId - Gmail フィルタ ID
+ * @returns {Object} 削除結果
+ */
+function deleteFilterFromGmail(filterId) {
+  Gmail.Users.Settings.Filters.remove('me', filterId)
+  addHistory('DELETE_FILTER', '(ラベルなし)', `Deleted filter ${filterId}`)
+  return { success: true }
+}
 
 /**
  * 既存の一致するメールにフィルタアクションを適用

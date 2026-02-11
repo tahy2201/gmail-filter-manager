@@ -115,8 +115,8 @@ interface FilterTableProps {
   labelGroups: LabelGroupData[]
   onEditFilter?: (filter: FilterEntry) => void
   onDeleteFilter?: (filterId: string) => void
-  onUpdateDeleteRule?: (labelName: string, rule: DeleteRule | null) => void
-  onExecuteDeleteRule?: (labelName: string, days: number) => Promise<number>
+  onUpdateDeleteRule?: (labelId: string, labelName: string, rule: DeleteRule | null) => void
+  onExecuteDeleteRule?: (labelId: string, labelName: string, days: number) => Promise<number>
 }
 
 function ConditionItemDisplay({ label, value, color }: { label: string; value: string; color: string }) {
@@ -172,6 +172,7 @@ export function FilterTable({
 
   const rows: Array<{
     filter: FilterEntry
+    labelId: string
     labelName: string
     deleteRule: DeleteRule | null
     isFirstInGroup: boolean
@@ -185,6 +186,7 @@ export function FilterTable({
     for (let i = 0; i < group.filters.length; i++) {
       rows.push({
         filter: group.filters[i],
+        labelId: group.labelId,
         labelName: group.labelName,
         deleteRule: group.deleteRule,
         isFirstInGroup: i === 0,
@@ -391,6 +393,7 @@ export function FilterTable({
                 <DeleteRuleCell
                   deleteRule={row.deleteRule}
                   rowSpan={row.rowSpan}
+                  labelId={row.labelId}
                   labelName={row.labelName}
                   onUpdateDeleteRule={onUpdateDeleteRule}
                   onExecuteDeleteRule={onExecuteDeleteRule}

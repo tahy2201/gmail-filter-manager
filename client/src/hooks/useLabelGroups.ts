@@ -11,47 +11,51 @@ export function useLabelGroups({
   deleteRules,
 }: UseLabelGroupsParams): LabelGroupData[] {
   return useMemo(() => {
-    // ラベルの完全名（一番下の階層）でグルーピング
+    // ラベル名でグルーピング（labelId も保持）
     const groupMap = new Map<string, LabelGroupData>()
+    // labelId → グループの逆引きインデックス（削除ルールのマッチング用）
+    const labelIdIndex = new Map<string, LabelGroupData>()
 
     // フィルタをグルーピング
     for (const filter of filters) {
       const label = filter.action.label || '(ラベルなし)'
+      const labelId = filter.action.labelId || ''
 
-      if (!groupMap.has(label)) {
-        groupMap.set(label, {
-          labelName: label,
-          filters: [],
-          deleteRule: null,
-        })
+      let group = groupMap.get(label)
+      if (!group) {
+        group = { labelId, labelName: label, filters: [], deleteRule: null }
+        groupMap.set(label, group)
       }
 
-      const group = groupMap.get(label)
-      if (group) {
-        group.filters.push(filter)
+      group.filters.push(filter)
+      // labelId が空だった場合、後続のフィルタから補完
+      if (!group.labelId && labelId) {
+        group.labelId = labelId
+      }
+      if (group.labelId) {
+        labelIdIndex.set(group.labelId, group)
       }
     }
 
-    // 削除ルールをマッピング
+    // 削除ルールを labelId でマッピング
     for (const rule of deleteRules) {
-      if (!groupMap.has(rule.labelName)) {
+      const group = labelIdIndex.get(rule.labelId)
+      if (group) {
+        group.deleteRule = rule
+      } else {
         // 削除ルールだけ存在してフィルタがないラベル
         groupMap.set(rule.labelName, {
+          labelId: rule.labelId,
           labelName: rule.labelName,
           filters: [],
           deleteRule: rule,
         })
-      } else {
-        const group = groupMap.get(rule.labelName)
-        if (group) {
-          group.deleteRule = rule
-        }
       }
     }
 
     // ソートして配列で返す
     return Array.from(groupMap.values()).sort((a, b) =>
-      a.labelName.localeCompare(b.labelName)
+      a.labelName.localeCompare(b.labelName),
     )
   }, [filters, deleteRules])
 }

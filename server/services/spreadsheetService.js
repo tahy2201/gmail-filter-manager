@@ -1,5 +1,4 @@
 const SPREADSHEET_ID_KEY = 'SPREADSHEET_ID'
-const FILTERS_SHEET_NAME = 'Filters'
 const DELETE_RULES_SHEET_NAME = 'DeleteRules'
 const HISTORY_SHEET_NAME = 'History'
 
@@ -28,37 +27,14 @@ function getOrCreateSpreadsheet() {
 }
 
 function initializeSheets(ss) {
-  // Filters シート
-  let filtersSheet = ss.getSheetByName(FILTERS_SHEET_NAME)
-  if (!filtersSheet) {
-    filtersSheet = ss.getSheets()[0]
-    filtersSheet.setName(FILTERS_SHEET_NAME)
-  }
-  filtersSheet
-    .getRange('A1:J1')
-    .setValues([
-      [
-        'id',
-        'from',
-        'to',
-        'subject',
-        'hasTheWord',
-        'doesNotHaveTheWord',
-        'label',
-        'shouldArchive',
-        'shouldMarkAsRead',
-        'shouldNeverSpam'
-      ]
-    ])
-  filtersSheet.getRange('A1:J1').setFontWeight('bold')
-
-  // DeleteRules シート
+  // デフォルトの Sheet1 を DeleteRules にリネーム
   let deleteSheet = ss.getSheetByName(DELETE_RULES_SHEET_NAME)
   if (!deleteSheet) {
-    deleteSheet = ss.insertSheet(DELETE_RULES_SHEET_NAME)
+    deleteSheet = ss.getSheets()[0]
+    deleteSheet.setName(DELETE_RULES_SHEET_NAME)
   }
-  deleteSheet.getRange('A1:C1').setValues([['labelName', 'delayDays', 'enabled']])
-  deleteSheet.getRange('A1:C1').setFontWeight('bold')
+  deleteSheet.getRange('A1:D1').setValues([['labelId', 'labelName', 'delayDays', 'enabled']])
+  deleteSheet.getRange('A1:D1').setFontWeight('bold')
 
   // History シート
   let historySheet = ss.getSheetByName(HISTORY_SHEET_NAME)
@@ -111,7 +87,7 @@ function updateSpreadsheetId(newSpreadsheetId) {
   const ss = SpreadsheetApp.openById(newSpreadsheetId)
 
   // 必須シートの存在確認
-  const requiredSheets = [FILTERS_SHEET_NAME, DELETE_RULES_SHEET_NAME, HISTORY_SHEET_NAME]
+  const requiredSheets = [DELETE_RULES_SHEET_NAME, HISTORY_SHEET_NAME]
   const missingSheets = requiredSheets.filter(function (name) {
     return !ss.getSheetByName(name)
   })

@@ -32,13 +32,13 @@ function saveDeleteRules(rules) {
 
 /**
  * 指定ラベルの古いメールを削除
- * @param {string} labelName ラベル名
+ * @param {string} labelId Gmail ラベル ID
  * @param {number} days 経過日数
  * @returns {Object} 削除結果
  */
-function executeDeleteRule(labelName, days) {
+function executeDeleteRule(labelId, days) {
   try {
-    return executeDeleteByLabel(labelName, days)
+    return executeDeleteByLabel(labelId, days)
   } catch (error) {
     console.error('Error executing delete rule:', error)
     throw new Error(`Failed to execute delete rule: ${error.message}`)

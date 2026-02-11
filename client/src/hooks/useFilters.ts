@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api as gasApi } from '../services'
 import type { FilterEntry } from '../types'
 import { getErrorMessage } from '../utils/error'
@@ -8,6 +8,8 @@ export function useFilters() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const filtersRef = useRef(filters)
+  filtersRef.current = filters
 
   const fetchFilters = useCallback(async () => {
     setLoading(true)
@@ -26,91 +28,78 @@ export function useFilters() {
     fetchFilters()
   }, [fetchFilters])
 
-  // 楽観的更新版のsaveFilters（自動Gmail同期付き）
-  const saveFilters = useCallback(async (newFilters: FilterEntry[], previousFilters: FilterEntry[]) => {
-    setSaving(true)
-    setError(null)
-    try {
-      await gasApi.saveFilters(newFilters)
-      // Gmail同期失敗は警告のみ（スプレッドシートには保存済み）
-      await gasApi.applyFilterDiff(false).catch((e: Error) => {
-        setError(`保存完了。Gmail同期に失敗: ${e.message}`)
-      })
-      return true
-    } catch (e) {
-      setFilters(previousFilters)
-      setError(getErrorMessage(e, 'Failed to save filters'))
-      return false
-    } finally {
-      setSaving(false)
-    }
-  }, [])
-
-  const importFromXml = useCallback(
-    async (xml: string) => {
-      setLoading(true)
-      setError(null)
-      try {
-        await gasApi.importFiltersXml(xml)
-        await fetchFilters()
-        return true
-      } catch (e) {
-        setError(getErrorMessage(e, 'Failed to import filters'))
-        return false
-      } finally {
-        setLoading(false)
-      }
-    },
-    [fetchFilters],
-  )
-
-  // 楽観的更新: 即座にUIを更新し、バックグラウンドで保存
   const addFilter = useCallback(
     async (filter: Omit<FilterEntry, 'id'>) => {
-      const newFilter: FilterEntry = {
-        ...filter,
-        id: `filter_${Date.now()}`,
+      setSaving(true)
+      setError(null)
+      try {
+        const created = await gasApi.createFilter(filter)
+        setFilters((prev) => [...prev, created])
+        return true
+      } catch (e) {
+        setError(getErrorMessage(e, 'Failed to create filter'))
+        return false
+      } finally {
+        setSaving(false)
       }
-      const previousFilters = filters
-      const newFilters = [...filters, newFilter]
-
-      // 即座にUIを更新
-      setFilters(newFilters)
-
-      // バックグラウンドで保存
-      return saveFilters(newFilters, previousFilters)
     },
-    [filters, saveFilters],
+    [],
   )
 
   const updateFilter = useCallback(
     async (filterId: string, updates: Partial<FilterEntry>) => {
-      const previousFilters = filters
-      const newFilters = filters.map((f) =>
-        f.id === filterId ? { ...f, ...updates } : f,
-      )
-
-      // 即座にUIを更新
-      setFilters(newFilters)
-
-      // バックグラウンドで保存
-      return saveFilters(newFilters, previousFilters)
+      setSaving(true)
+      setError(null)
+      const snapshot = filtersRef.current
+      try {
+        // 楽観的更新
+        setFilters((prev) =>
+          prev.map((f) => (f.id === filterId ? { ...f, ...updates } : f)),
+        )
+        const target = snapshot.find((f) => f.id === filterId)
+        if (!target) throw new Error('Filter not found')
+        const merged = { ...target, ...updates }
+        const updated = await gasApi.updateFilter(filterId, {
+          criteria: merged.criteria,
+          action: merged.action,
+        })
+        // サーバーから返された新IDで置き換え
+        setFilters((prev) =>
+          prev.map((f) => (f.id === filterId ? updated : f)),
+        )
+        return true
+      } catch (e) {
+        // ロールバック: スナップショットに復元
+        setFilters(snapshot)
+        setError(getErrorMessage(e, 'Failed to update filter'))
+        return false
+      } finally {
+        setSaving(false)
+      }
     },
-    [filters, saveFilters],
+    [],
   )
 
   const deleteFilter = useCallback(
     async (filterId: string) => {
-      const previousFilters = filters
-      const newFilters = filters.filter((f) => f.id !== filterId)
-
-      // 即座にUIを更新
-      setFilters(newFilters)
-
-      // バックグラウンドで保存
-      return saveFilters(newFilters, previousFilters)
+      setSaving(true)
+      setError(null)
+      const snapshot = filtersRef.current
+      try {
+        // 楽観的更新
+        setFilters((prev) => prev.filter((f) => f.id !== filterId))
+        await gasApi.deleteFilter(filterId)
+        return true
+      } catch (e) {
+        // ロールバック: スナップショットに復元
+        setFilters(snapshot)
+        setError(getErrorMessage(e, 'Failed to delete filter'))
+        return false
+      } finally {
+        setSaving(false)
+      }
     },
-    [filters, saveFilters],
+    [],
   )
 
   return {
@@ -119,7 +108,6 @@ export function useFilters() {
     saving,
     error,
     refetch: fetchFilters,
-    importFromXml,
     addFilter,
     updateFilter,
     deleteFilter,

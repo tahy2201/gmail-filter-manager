@@ -9,10 +9,11 @@ import type { DeleteRule } from '../../types'
 interface DeleteRuleDialogProps {
   open: boolean
   onClose: () => void
+  labelId: string
   labelName: string
   deleteRule: DeleteRule | null
-  onUpdateDeleteRule?: (labelName: string, rule: DeleteRule | null) => void
-  onExecuteDeleteRule?: (labelName: string, days: number) => Promise<number>
+  onUpdateDeleteRule?: (labelId: string, labelName: string, rule: DeleteRule | null) => void
+  onExecuteDeleteRule?: (labelId: string, labelName: string, days: number) => Promise<number>
 }
 
 /**
@@ -23,6 +24,7 @@ interface DeleteRuleDialogProps {
 export function DeleteRuleDialog({
   open,
   onClose,
+  labelId,
   labelName,
   deleteRule,
   onUpdateDeleteRule,
@@ -36,12 +38,13 @@ export function DeleteRuleDialog({
 
   function handleToggle() {
     if (!deleteRule || !onUpdateDeleteRule) return
-    onUpdateDeleteRule(labelName, { ...deleteRule, enabled: !deleteRule.enabled })
+    onUpdateDeleteRule(labelId, labelName, { ...deleteRule, enabled: !deleteRule.enabled })
   }
 
   function handleSave() {
     if (!onUpdateDeleteRule) return
-    onUpdateDeleteRule(labelName, {
+    onUpdateDeleteRule(labelId, labelName, {
+      labelId,
       labelName,
       delayDays: Number(editDaysStr) || 1,
       enabled: deleteRule?.enabled ?? true,
@@ -51,7 +54,7 @@ export function DeleteRuleDialog({
 
   function handleRemove() {
     if (!onUpdateDeleteRule) return
-    onUpdateDeleteRule(labelName, null)
+    onUpdateDeleteRule(labelId, labelName, null)
     onClose()
   }
 
@@ -59,7 +62,7 @@ export function DeleteRuleDialog({
     if (!deleteRule || !onExecuteDeleteRule || executing) return
     setExecuting(true)
     try {
-      await onExecuteDeleteRule(labelName, deleteRule.delayDays)
+      await onExecuteDeleteRule(labelId, labelName, deleteRule.delayDays)
     } finally {
       setExecuting(false)
     }

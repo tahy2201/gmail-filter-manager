@@ -8,6 +8,7 @@ export interface FilterCriteria {
 
 export interface FilterAction {
   label?: string
+  labelId?: string
   shouldArchive?: boolean
   shouldMarkAsRead?: boolean
   shouldNeverSpam?: boolean
@@ -37,6 +38,7 @@ export interface EmailPreview {
 }
 
 export interface DeleteRule {
+  labelId: string
   labelName: string
   delayDays: number
   enabled: boolean
@@ -48,29 +50,8 @@ export interface ApiResponse<T> {
   error?: string
 }
 
-export interface FilterDiffItem {
-  gmailId?: string
-  from?: string
-  to?: string
-  subject?: string
-  hasTheWord?: string
-  label?: string
-}
-
-export interface FilterDiffResult {
-  created: number
-  deleted: number
-  errors: Array<{
-    action: 'create' | 'delete'
-    filter: FilterDiffItem
-    error: string
-  }>
-  dryRun?: boolean
-  wouldCreate?: number
-  wouldDelete?: number
-}
-
 export interface LabelGroupData {
+  labelId: string
   labelName: string
   filters: FilterEntry[]
   deleteRule: DeleteRule | null

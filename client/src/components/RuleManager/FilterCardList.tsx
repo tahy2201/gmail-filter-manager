@@ -8,8 +8,8 @@ interface FilterCardListProps {
   labelGroups: LabelGroupData[]
   onEditFilter?: (filter: FilterEntry) => void
   onDeleteFilter?: (filterId: string) => void
-  onUpdateDeleteRule?: (labelName: string, rule: DeleteRule | null) => void
-  onExecuteDeleteRule?: (labelName: string, days: number) => Promise<number>
+  onUpdateDeleteRule?: (labelId: string, labelName: string, rule: DeleteRule | null) => void
+  onExecuteDeleteRule?: (labelId: string, labelName: string, days: number) => Promise<number>
 }
 
 /**
@@ -25,16 +25,17 @@ export function FilterCardList({
 }: FilterCardListProps) {
   const [dialogState, setDialogState] = useState<{
     open: boolean
+    labelId: string
     labelName: string
     deleteRule: DeleteRule | null
-  }>({ open: false, labelName: '', deleteRule: null })
+  }>({ open: false, labelId: '', labelName: '', deleteRule: null })
 
-  function handleSectionClick(labelName: string, deleteRule: DeleteRule | null) {
-    setDialogState({ open: true, labelName, deleteRule })
+  function handleSectionClick(labelId: string, labelName: string, deleteRule: DeleteRule | null) {
+    setDialogState({ open: true, labelId, labelName, deleteRule })
   }
 
   function handleCloseDialog() {
-    setDialogState({ open: false, labelName: '', deleteRule: null })
+    setDialogState({ open: false, labelId: '', labelName: '', deleteRule: null })
   }
 
   // 空の場合
@@ -82,7 +83,7 @@ export function FilterCardList({
                     bgcolor: 'primary.dark',
                   },
                 }}
-                onClick={() => handleSectionClick(group.labelName, group.deleteRule)}
+                onClick={() => handleSectionClick(group.labelId, group.labelName, group.deleteRule)}
               >
                 <Typography variant="h4" sx={{ fontWeight: 'bold', fontSize: '18px' }}>
                   {group.labelName}
@@ -126,6 +127,7 @@ export function FilterCardList({
       <DeleteRuleDialog
         open={dialogState.open}
         onClose={handleCloseDialog}
+        labelId={dialogState.labelId}
         labelName={dialogState.labelName}
         deleteRule={dialogState.deleteRule}
         onUpdateDeleteRule={onUpdateDeleteRule}

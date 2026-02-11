@@ -9,12 +9,13 @@ import type { DeleteRule } from '../../types'
 interface DeleteRuleCellProps {
   deleteRule: DeleteRule | null
   rowSpan: number
+  labelId: string
   labelName: string
-  onUpdateDeleteRule?: (labelName: string, rule: DeleteRule | null) => void
-  onExecuteDeleteRule?: (labelName: string, days: number) => Promise<number>
+  onUpdateDeleteRule?: (labelId: string, labelName: string, rule: DeleteRule | null) => void
+  onExecuteDeleteRule?: (labelId: string, labelName: string, days: number) => Promise<number>
 }
 
-export function DeleteRuleCell({ deleteRule, rowSpan, labelName, onUpdateDeleteRule, onExecuteDeleteRule }: DeleteRuleCellProps) {
+export function DeleteRuleCell({ deleteRule, rowSpan, labelId, labelName, onUpdateDeleteRule, onExecuteDeleteRule }: DeleteRuleCellProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [editDaysStr, setEditDaysStr] = useState(String(deleteRule?.delayDays ?? 30))
   const [executing, setExecuting] = useState(false)
@@ -28,18 +29,18 @@ export function DeleteRuleCell({ deleteRule, rowSpan, labelName, onUpdateDeleteR
 
   function handleToggle() {
     if (!deleteRule || !onUpdateDeleteRule) return
-    onUpdateDeleteRule(labelName, { ...deleteRule, enabled: !deleteRule.enabled })
+    onUpdateDeleteRule(labelId, labelName, { ...deleteRule, enabled: !deleteRule.enabled })
   }
 
   function handleSave() {
     if (!onUpdateDeleteRule) return
-    onUpdateDeleteRule(labelName, { labelName, delayDays: Number(editDaysStr) || 1, enabled: deleteRule?.enabled ?? true })
+    onUpdateDeleteRule(labelId, labelName, { labelId, labelName, delayDays: Number(editDaysStr) || 1, enabled: deleteRule?.enabled ?? true })
     handleClose()
   }
 
   function handleRemove() {
     if (!onUpdateDeleteRule) return
-    onUpdateDeleteRule(labelName, null)
+    onUpdateDeleteRule(labelId, labelName, null)
     handleClose()
   }
 
@@ -48,7 +49,7 @@ export function DeleteRuleCell({ deleteRule, rowSpan, labelName, onUpdateDeleteR
     setExecuting(true)
     handleClose()
     try {
-      await onExecuteDeleteRule(labelName, deleteRule.delayDays)
+      await onExecuteDeleteRule(labelId, labelName, deleteRule.delayDays)
     } finally {
       setExecuting(false)
     }
