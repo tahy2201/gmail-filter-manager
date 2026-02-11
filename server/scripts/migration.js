@@ -45,12 +45,7 @@ function migrateDeleteRules() {
   const newData = []
   const warnings = []
 
-  for (let i = 0; i < oldData.length; i++) {
-    const row = oldData[i]
-    const labelName = row[0]
-    const delayDays = row[1]
-    const enabled = row[2]
-
+  for (const [labelName, delayDays, enabled] of oldData) {
     if (!labelName) continue
 
     const labelId = nameToId[labelName]
@@ -80,8 +75,8 @@ function migrateDeleteRules() {
   console.log('スキップ: ' + warnings.length + ' 件')
   if (warnings.length > 0) {
     console.warn('⚠ 以下のルールはGmailにラベルが存在しないためスキップされました:')
-    for (let j = 0; j < warnings.length; j++) {
-      console.warn('  - ' + warnings[j])
+    for (const warning of warnings) {
+      console.warn('  - ' + warning)
     }
     console.warn('⚠ スキップされたルールは手動でDeleteRulesシートに追加してください')
   }

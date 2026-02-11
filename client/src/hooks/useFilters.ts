@@ -69,12 +69,8 @@ export function useFilters() {
         )
         return true
       } catch (e) {
-        // ロールバック: 楽観的更新を取り消し、他の変更は保持
-        setFilters((prev) => {
-          const original = snapshot.find((f) => f.id === filterId)
-          if (!original) return prev
-          return prev.map((f) => (f.id === filterId ? original : f))
-        })
+        // ロールバック: スナップショットに復元
+        setFilters(snapshot)
         setError(getErrorMessage(e, 'Failed to update filter'))
         return false
       } finally {
@@ -95,17 +91,8 @@ export function useFilters() {
         await gasApi.deleteFilter(filterId)
         return true
       } catch (e) {
-        // ロールバック: 削除したフィルタを元の位置に復元
-        setFilters((prev) => {
-          const deleted = snapshot.find((f) => f.id === filterId)
-          if (!deleted) return prev
-          // 元の順序を復元するため snapshot の順序を基に再構築
-          const currentIds = new Set(prev.map((f) => f.id))
-          const restored = snapshot.filter(
-            (f) => currentIds.has(f.id) || f.id === filterId,
-          )
-          return restored
-        })
+        // ロールバック: スナップショットに復元
+        setFilters(snapshot)
         setError(getErrorMessage(e, 'Failed to delete filter'))
         return false
       } finally {

@@ -44,24 +44,13 @@ function normalizeGmailFilter(gmailFilter, idToName) {
   const criteria = gmailFilter.criteria || {}
   const action = gmailFilter.action || {}
 
-  // addLabelIds からラベル名・IDを取得
-  let labelName = ''
-  let userLabelId = ''
-  if (action.addLabelIds && action.addLabelIds.length > 0) {
-    for (const lid of action.addLabelIds) {
-      if (idToName[lid] && !lid.startsWith('CATEGORY_')) {
-        labelName = idToName[lid]
-        userLabelId = lid
-        break
-      }
-    }
-  }
+  // addLabelIds からユーザーラベルを取得（カテゴリラベルを除外）
+  const addLabelIds = action.addLabelIds || []
+  const userLabelId = addLabelIds.find((lid) => idToName[lid] && !lid.startsWith('CATEGORY_')) || ''
+  const labelName = userLabelId ? idToName[userLabelId] : ''
 
   // removeLabelIds から各フラグを判定
   const removeLabelIds = action.removeLabelIds || []
-  const shouldArchive = removeLabelIds.includes('INBOX')
-  const shouldMarkAsRead = removeLabelIds.includes('UNREAD')
-  const shouldNeverSpam = removeLabelIds.includes('SPAM')
 
   return {
     id: gmailFilter.id,
@@ -75,9 +64,9 @@ function normalizeGmailFilter(gmailFilter, idToName) {
     action: {
       label: labelName,
       labelId: userLabelId,
-      shouldArchive: shouldArchive,
-      shouldMarkAsRead: shouldMarkAsRead,
-      shouldNeverSpam: shouldNeverSpam,
+      shouldArchive: removeLabelIds.includes('INBOX'),
+      shouldMarkAsRead: removeLabelIds.includes('UNREAD'),
+      shouldNeverSpam: removeLabelIds.includes('SPAM'),
       forwardTo: action.forward || ''
     }
   }
@@ -137,18 +126,15 @@ function buildGmailFilter(filter) {
     const label = getOrCreateLabel(filter.action.label)
     gmailFilter.action.addLabelIds = [label.id]
   }
-  if (filter.action.shouldArchive) {
-    gmailFilter.action.removeLabelIds = gmailFilter.action.removeLabelIds || []
-    gmailFilter.action.removeLabelIds.push('INBOX')
+
+  const removeLabelIds = []
+  if (filter.action.shouldArchive) removeLabelIds.push('INBOX')
+  if (filter.action.shouldMarkAsRead) removeLabelIds.push('UNREAD')
+  if (filter.action.shouldNeverSpam) removeLabelIds.push('SPAM')
+  if (removeLabelIds.length > 0) {
+    gmailFilter.action.removeLabelIds = removeLabelIds
   }
-  if (filter.action.shouldMarkAsRead) {
-    gmailFilter.action.removeLabelIds = gmailFilter.action.removeLabelIds || []
-    gmailFilter.action.removeLabelIds.push('UNREAD')
-  }
-  if (filter.action.shouldNeverSpam) {
-    gmailFilter.action.removeLabelIds = gmailFilter.action.removeLabelIds || []
-    gmailFilter.action.removeLabelIds.push('SPAM')
-  }
+
   if (filter.action.forwardTo) {
     gmailFilter.action.forward = filter.action.forwardTo
   }
