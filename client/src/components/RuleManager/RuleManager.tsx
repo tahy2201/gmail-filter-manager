@@ -229,7 +229,8 @@ export function RuleManager() {
             : ''
         }
         onConfirm={handleDelete}
-        onCancel={() => setDeletingFilterId(null)}
+        onCancel={() => !saving && setDeletingFilterId(null)}
+        loading={saving}
       />
 
       <Snackbar

@@ -1,5 +1,6 @@
 import {
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -17,6 +18,7 @@ interface Props {
   onCancel: () => void
   confirmLabel?: string
   cancelLabel?: string
+  loading?: boolean
 }
 
 export function ConfirmDialog({
@@ -27,6 +29,7 @@ export function ConfirmDialog({
   onCancel,
   confirmLabel = '削除',
   cancelLabel = 'キャンセル',
+  loading = false,
 }: Props) {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
@@ -34,7 +37,7 @@ export function ConfirmDialog({
   return (
     <Dialog
       open={isOpen}
-      onClose={onCancel}
+      onClose={loading ? undefined : onCancel}
       maxWidth="xs"
       fullWidth
       fullScreen={isMobile}
@@ -80,6 +83,7 @@ export function ConfirmDialog({
         <Button
           onClick={onCancel}
           color="inherit"
+          disabled={loading}
           sx={{
             fontSize: isMobile ? '1.1rem' : '1rem',
             minHeight: isMobile ? 48 : 36,
@@ -93,6 +97,8 @@ export function ConfirmDialog({
           onClick={onConfirm}
           color="error"
           variant="contained"
+          disabled={loading}
+          startIcon={loading ? <CircularProgress size={16} color="inherit" /> : undefined}
           sx={{
             fontSize: isMobile ? '1.1rem' : '1rem',
             minHeight: isMobile ? 48 : 36,
@@ -100,7 +106,7 @@ export function ConfirmDialog({
             order: isMobile ? 1 : 2,
           }}
         >
-          {confirmLabel}
+          {loading ? '削除中...' : confirmLabel}
         </Button>
       </DialogActions>
     </Dialog>
