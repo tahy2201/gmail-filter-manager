@@ -70,6 +70,7 @@ export function RuleManager() {
     criteria: FilterEntry['criteria'],
     action: FilterEntry['action']
   ) {
+    setSnackbarMessage('既存メールへのラベル適用中...')
     try {
       const result = await gasApi.applyToExistingMessages({ criteria, action })
 
@@ -91,20 +92,20 @@ export function RuleManager() {
   async function handleCreate(filterData: Omit<FilterEntry, 'id'>, applyToExisting?: boolean) {
     const success = await addFilter(filterData)
     if (success) {
-      if (applyToExisting && filterData.action.label) {
-        await applyToExistingAndNotify(filterData.criteria, filterData.action)
-      }
       setIsCreateModalOpen(false)
+      if (applyToExisting && filterData.action.label) {
+        applyToExistingAndNotify(filterData.criteria, filterData.action)
+      }
     }
   }
 
   async function handleUpdate(filterData: FilterEntry, applyToExisting?: boolean) {
     const success = await updateFilter(filterData.id, filterData)
     if (success) {
-      if (applyToExisting && filterData.action.label) {
-        await applyToExistingAndNotify(filterData.criteria, filterData.action)
-      }
       setEditingFilter(null)
+      if (applyToExisting && filterData.action.label) {
+        applyToExistingAndNotify(filterData.criteria, filterData.action)
+      }
     }
   }
 
