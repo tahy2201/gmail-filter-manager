@@ -81,9 +81,7 @@ function executeDeleteByLabel(labelId, days) {
  */
 function updateDeleteRuleLabelName(labelId, newLabelName) {
   const rules = getDeleteRulesFromStorage()
-  const updated = rules.map((r) =>
-    r.labelId === labelId ? { ...r, labelName: newLabelName } : r
-  )
+  const updated = rules.map((r) => (r.labelId === labelId ? { ...r, labelName: newLabelName } : r))
 
   // 変更がある場合のみ保存
   if (rules.some((r) => r.labelId === labelId)) {

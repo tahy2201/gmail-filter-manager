@@ -132,7 +132,13 @@ function renameLabelInGmail(labelId, newName) {
     updateDeleteRuleLabelName(child.id, newChildName)
   }
 
-  addHistory('RENAME_LABEL', newName, 'Renamed label ' + labelId + (childLabels.length > 0 ? ' (+ ' + childLabels.length + ' sub-labels)' : ''))
+  addHistory(
+    'RENAME_LABEL',
+    newName,
+    'Renamed label ' +
+      labelId +
+      (childLabels.length > 0 ? ' (+ ' + childLabels.length + ' sub-labels)' : '')
+  )
 
   return {
     id: updated.id,
@@ -172,7 +178,13 @@ function deleteLabelFromGmail(labelId) {
 
   Gmail.Users.Labels.remove('me', labelId)
 
-  addHistory('DELETE_LABEL', labelName, 'Deleted label ' + labelId + (childLabels.length > 0 ? ' (+ ' + childLabels.length + ' sub-labels)' : ''))
+  addHistory(
+    'DELETE_LABEL',
+    labelName,
+    'Deleted label ' +
+      labelId +
+      (childLabels.length > 0 ? ' (+ ' + childLabels.length + ' sub-labels)' : '')
+  )
 
   return { success: true }
 }
