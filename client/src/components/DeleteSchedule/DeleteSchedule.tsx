@@ -30,30 +30,22 @@ export function DeleteSchedule() {
     }
   }
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        <CircularProgress size={16} />
-      </Box>
-    )
-  }
-
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
       <Tooltip title={error || '日次削除スケジュール'}>
-        <ScheduleIcon fontSize="small" color={error ? 'error' : 'action'} sx={{ fontSize: 18 }} />
+        <ScheduleIcon fontSize="small" color={error ? 'error' : 'action'} sx={{ fontSize: 18, visibility: loading ? 'hidden' : 'visible' }} />
       </Tooltip>
 
       <Tooltip title={status.enabled ? 'スケジュールON' : 'スケジュールOFF'}>
-        <Switch size="small" checked={status.enabled} onChange={handleToggleTrigger} disabled={saving} />
+        <Switch size="small" checked={status.enabled} onChange={handleToggleTrigger} disabled={loading || saving} sx={{ visibility: loading ? 'hidden' : 'visible' }} />
       </Tooltip>
 
       <FormControl size="small" sx={{ minWidth: 70 }}>
         <Select
           value={selectedHour}
           onChange={(e) => handleHourChange(Number(e.target.value))}
-          disabled={saving}
-          sx={{ height: 28, '& .MuiSelect-select': { py: 0.25, fontSize: '0.8rem' } }}
+          disabled={loading || saving}
+          sx={{ height: 28, visibility: loading ? 'hidden' : 'visible', '& .MuiSelect-select': { py: 0.25, fontSize: '0.8rem' } }}
         >
           {HOURS.map((h) => (
             <MenuItem key={h} value={h}>
@@ -63,7 +55,16 @@ export function DeleteSchedule() {
         </Select>
       </FormControl>
 
-      {saving && <CircularProgress size={14} />}
+      {(loading || saving) && (
+        <CircularProgress
+          size={16}
+          sx={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+        />
+      )}
     </Box>
   )
 }

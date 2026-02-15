@@ -111,14 +111,17 @@ export const mockFilters: FilterEntry[] = [
 ]
 
 export const mockLabels: Label[] = [
-  { id: 'label_1', name: 'GitHub', type: 'user' },
-  { id: 'label_2', name: 'Slack', type: 'user' },
-  { id: 'label_3', name: 'Google', type: 'user' },
-  { id: 'label_4', name: 'Newsletter', type: 'user' },
-  { id: 'label_5', name: 'Support', type: 'user' },
-  { id: 'label_6', name: 'Important', type: 'user' },
-  { id: 'label_7', name: 'Social', type: 'user' },
-  { id: 'label_8', name: 'AWS', type: 'user' },
+  { id: 'label_1', name: 'GitHub', type: 'user', color: { backgroundColor: '#b6cff5', textColor: '#0d3472' } },
+  { id: 'label_2', name: 'Slack', type: 'user', color: { backgroundColor: '#e3d7ff', textColor: '#3d188e' } },
+  { id: 'label_3', name: 'Google', type: 'user', color: null },
+  { id: 'label_4', name: 'Newsletter', type: 'user', color: { backgroundColor: '#ffc8af', textColor: '#7a2e0b' } },
+  { id: 'label_5', name: 'Support', type: 'user', color: null },
+  { id: 'label_6', name: 'Important', type: 'user', color: { backgroundColor: '#fb4c2f', textColor: '#ffffff' } },
+  { id: 'label_7', name: 'Social', type: 'user', color: null },
+  { id: 'label_8', name: 'AWS', type: 'user', color: { backgroundColor: '#fad165', textColor: '#594c05' } },
+  { id: 'label_9', name: 'GitHub/Actions', type: 'user', color: null },
+  { id: 'label_10', name: 'GitHub/PR', type: 'user', color: { backgroundColor: '#c9daf8', textColor: '#0d3472' } },
+  { id: 'label_11', name: 'AWS/Billing', type: 'user', color: null },
   { id: 'inbox', name: 'INBOX', type: 'system' },
   { id: 'sent', name: 'SENT', type: 'system' },
 ]

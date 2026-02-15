@@ -37,6 +37,11 @@ interface GasRunner {
   removeDeleteTrigger: () => void
   getDeleteHistory: (limit: number) => void
   updateSpreadsheetReference: (spreadsheetId: string) => void
+  createLabel: (labelName: string) => void
+  renameLabel: (labelId: string, newName: string) => void
+  deleteLabel: (labelId: string) => void
+  checkLabelDeletionImpact: (labelId: string) => void
+  updateLabelColor: (labelId: string, backgroundColor: string, textColor: string) => void
 }
 
 function runGasFunction<T>(
@@ -115,4 +120,19 @@ export const gasApi = {
 
   updateSpreadsheetReference: (spreadsheetId: string): Promise<{ url: string }> =>
     runGasFunction('updateSpreadsheetReference', spreadsheetId),
+
+  createLabel: (labelName: string): Promise<Label> =>
+    runGasFunction('createLabel', labelName),
+
+  renameLabel: (labelId: string, newName: string): Promise<Label> =>
+    runGasFunction('renameLabel', labelId, newName),
+
+  deleteLabel: (labelId: string): Promise<{ success: boolean }> =>
+    runGasFunction('deleteLabel', labelId),
+
+  checkLabelDeletionImpact: (labelId: string): Promise<{ filtersCount: number; deleteRulesCount: number; childLabelsCount: number }> =>
+    runGasFunction('checkLabelDeletionImpact', labelId),
+
+  updateLabelColor: (labelId: string, backgroundColor: string, textColor: string): Promise<Label> =>
+    runGasFunction('updateLabelColor', labelId, backgroundColor, textColor),
 }

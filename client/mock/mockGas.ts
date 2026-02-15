@@ -18,6 +18,7 @@ const STORAGE_KEYS = {
   FILTERS: 'mock_filters',
   DELETE_RULES: 'mock_delete_rules',
   TRIGGER: 'mock_trigger',
+  LABELS: 'mock_labels',
 }
 
 // LocalStorageからデータを取得（パース失敗時はデフォルト値にフォールバック）
@@ -40,6 +41,10 @@ function getStoredDeleteRules(): DeleteRule[] {
   return getStored(STORAGE_KEYS.DELETE_RULES, mockDeleteRules)
 }
 
+function getStoredLabels(): Label[] {
+  return getStored(STORAGE_KEYS.LABELS, mockLabels)
+}
+
 function getStoredTrigger(): TriggerStatus {
   return getStored(STORAGE_KEYS.TRIGGER, { enabled: false, hour: null })
 }
@@ -51,6 +56,10 @@ function saveFiltersToStorage(filters: FilterEntry[]) {
 
 function saveDeleteRulesToStorage(rules: DeleteRule[]) {
   localStorage.setItem(STORAGE_KEYS.DELETE_RULES, JSON.stringify(rules))
+}
+
+function saveLabelsToStorage(labels: Label[]) {
+  localStorage.setItem(STORAGE_KEYS.LABELS, JSON.stringify(labels))
 }
 
 function saveTriggerToStorage(trigger: TriggerStatus) {
@@ -109,7 +118,7 @@ export const mockGasApi = {
 
   getLabels: async (): Promise<Label[]> => {
     console.log('[Mock API] getLabels')
-    return delay(mockLabels)
+    return delay(getStoredLabels())
   },
 
   getDeleteRules: async (): Promise<DeleteRule[]> => {
@@ -216,5 +225,94 @@ export const mockGasApi = {
   updateSpreadsheetReference: async (spreadsheetId: string): Promise<{ url: string }> => {
     console.log('[Mock API] updateSpreadsheetReference', spreadsheetId)
     return delay({ url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}` })
+  },
+
+  createLabel: async (labelName: string): Promise<Label> => {
+    console.log('[Mock API] createLabel', labelName)
+    const labels = getStoredLabels()
+    if (labels.some((l) => l.name === labelName)) {
+      throw new Error('同名のラベルが既に存在します: ' + labelName)
+    }
+    const newLabel: Label = {
+      id: `label_${Date.now()}`,
+      name: labelName,
+      type: 'user',
+      color: null,
+    }
+    saveLabelsToStorage([...labels, newLabel])
+    return delay(newLabel)
+  },
+
+  renameLabel: async (labelId: string, newName: string): Promise<Label> => {
+    console.log('[Mock API] renameLabel', labelId, newName)
+    const labels = getStoredLabels()
+    if (labels.some((l) => l.name === newName && l.id !== labelId)) {
+      throw new Error('同名のラベルが既に存在します: ' + newName)
+    }
+    const target = labels.find((l) => l.id === labelId)
+    if (!target) throw new Error('ラベルが見つかりません')
+    const oldName = target.name
+    const oldPrefix = oldName + '/'
+    const newPrefix = newName + '/'
+    // 親ラベル + サブラベルのカスケードリネーム
+    const updated = labels.map((l) => {
+      if (l.id === labelId) return { ...l, name: newName }
+      if (l.name.startsWith(oldPrefix)) return { ...l, name: newPrefix + l.name.substring(oldPrefix.length) }
+      return l
+    })
+    saveLabelsToStorage(updated)
+    const label = updated.find((l) => l.id === labelId)!
+    // 削除ルールのlabelNameも同期（親+子）
+    const rules = getStoredDeleteRules()
+    saveDeleteRulesToStorage(
+      rules.map((r) => {
+        if (r.labelId === labelId) return { ...r, labelName: newName }
+        const matchLabel = labels.find((l) => l.id === r.labelId)
+        if (matchLabel && matchLabel.name.startsWith(oldPrefix)) {
+          return { ...r, labelName: newPrefix + matchLabel.name.substring(oldPrefix.length) }
+        }
+        return r
+      }),
+    )
+    return delay(label)
+  },
+
+  deleteLabel: async (labelId: string): Promise<{ success: boolean }> => {
+    console.log('[Mock API] deleteLabel', labelId)
+    const labels = getStoredLabels()
+    const target = labels.find((l) => l.id === labelId)
+    if (!target) throw new Error('ラベルが見つかりません')
+    const childPrefix = target.name + '/'
+    const idsToRemove = new Set([labelId, ...labels.filter((l) => l.name.startsWith(childPrefix)).map((l) => l.id)])
+    saveLabelsToStorage(labels.filter((l) => !idsToRemove.has(l.id)))
+    // 関連削除ルールも除去（親+子）
+    const rules = getStoredDeleteRules()
+    saveDeleteRulesToStorage(rules.filter((r) => !idsToRemove.has(r.labelId)))
+    return delay({ success: true })
+  },
+
+  checkLabelDeletionImpact: async (labelId: string): Promise<{ filtersCount: number; deleteRulesCount: number; childLabelsCount: number }> => {
+    console.log('[Mock API] checkLabelDeletionImpact', labelId)
+    const labels = getStoredLabels()
+    const target = labels.find((l) => l.id === labelId)
+    const childPrefix = target ? target.name + '/' : ''
+    const childLabels = target ? labels.filter((l) => l.name.startsWith(childPrefix)) : []
+    const targetIds = new Set([labelId, ...childLabels.map((l) => l.id)])
+    const filters = getStoredFilters()
+    const filtersCount = filters.filter((f) => f.action.labelId && targetIds.has(f.action.labelId)).length
+    const rules = getStoredDeleteRules()
+    const deleteRulesCount = rules.filter((r) => targetIds.has(r.labelId)).length
+    return delay({ filtersCount, deleteRulesCount, childLabelsCount: childLabels.length })
+  },
+
+  updateLabelColor: async (labelId: string, backgroundColor: string, textColor: string): Promise<Label> => {
+    console.log('[Mock API] updateLabelColor', labelId, backgroundColor, textColor)
+    const labels = getStoredLabels()
+    const color = backgroundColor && textColor ? { backgroundColor, textColor } : null
+    const updated = labels.map((l) =>
+      l.id === labelId ? { ...l, color } : l,
+    )
+    saveLabelsToStorage(updated)
+    return delay(updated.find((l) => l.id === labelId)!)
   },
 }

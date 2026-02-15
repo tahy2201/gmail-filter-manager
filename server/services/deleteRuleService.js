@@ -75,6 +75,58 @@ function executeDeleteByLabel(labelId, days) {
 }
 
 /**
+ * リネーム時に削除ルールのlabelNameを同期
+ * @param {string} labelId - ラベルID
+ * @param {string} newLabelName - 新しいラベル名
+ */
+function updateDeleteRuleLabelName(labelId, newLabelName) {
+  const rules = getDeleteRulesFromStorage()
+  const updated = rules.map((r) =>
+    r.labelId === labelId ? { ...r, labelName: newLabelName } : r
+  )
+
+  // 変更がある場合のみ保存
+  if (rules.some((r) => r.labelId === labelId)) {
+    const sheet = getSheet(DELETE_RULES_SHEET)
+    const lastRow = sheet.getLastRow()
+
+    if (lastRow > 1) {
+      sheet.getRange(2, 1, lastRow - 1, 4).clearContent()
+    }
+
+    if (updated.length > 0) {
+      const data = deleteRulesToRows(updated)
+      sheet.getRange(2, 1, data.length, 4).setValues(data)
+    }
+  }
+}
+
+/**
+ * ラベル削除時に関連する削除ルールを除去
+ * @param {string} labelId - ラベルID
+ */
+function removeDeleteRulesByLabelId(labelId) {
+  const rules = getDeleteRulesFromStorage()
+  const filtered = rules.filter((r) => r.labelId !== labelId)
+
+  if (filtered.length !== rules.length) {
+    const sheet = getSheet(DELETE_RULES_SHEET)
+    const lastRow = sheet.getLastRow()
+
+    if (lastRow > 1) {
+      sheet.getRange(2, 1, lastRow - 1, 4).clearContent()
+    }
+
+    if (filtered.length > 0) {
+      const data = deleteRulesToRows(filtered)
+      sheet.getRange(2, 1, data.length, 4).setValues(data)
+    }
+
+    addHistory('REMOVE_DELETE_RULES', labelId, 'Removed delete rules for deleted label')
+  }
+}
+
+/**
  * すべての有効な削除ルールを実行
  * @returns {Array} 削除結果一覧
  */

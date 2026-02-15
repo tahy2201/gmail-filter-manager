@@ -11,6 +11,7 @@ import { api as gasApi } from '../../services'
 import type { DeleteRule, FilterEntry } from '../../types'
 import { ConfirmDialog } from '../ConfirmDialog'
 import { FilterEditForm } from '../FilterEditForm'
+import { LabelManager } from '../LabelManager'
 import { Modal } from '../Modal'
 import { FilterCardList } from './FilterCardList'
 import { FilterTable } from './FilterTable'
@@ -19,9 +20,12 @@ import { ToolbarLayout } from './ToolbarLayout'
 export function RuleManager() {
   const isMobile = useIsMobile()
 
-  const { filters, loading: filtersLoading, saving, error: filtersError, addFilter, updateFilter, deleteFilter } = useFilters()
-  const { labels } = useLabels()
-  const { rules: deleteRules, loading: rulesLoading, error: rulesError, saveRules, executeRule } = useDeleteRules()
+  const { filters, loading: filtersLoading, saving, error: filtersError, addFilter, updateFilter, deleteFilter, refetch: refetchFilters } = useFilters()
+  const {
+    labels, saving: labelSaving,
+    createLabel, renameLabel: renameLabelFn, deleteLabel: deleteLabelFn, updateLabelColor,
+  } = useLabels()
+  const { rules: deleteRules, loading: rulesLoading, error: rulesError, saveRules, executeRule, refetch: refetchDeleteRules } = useDeleteRules()
 
   const [search, setSearch] = useState('')
   const [labelFilter, setLabelFilter] = useState('')
@@ -30,6 +34,7 @@ export function RuleManager() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [deletingFilterId, setDeletingFilterId] = useState<string | null>(null)
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null)
+  const [isLabelManagerOpen, setIsLabelManagerOpen] = useState(false)
 
   const labelOptions = useMemo(() => {
     const set = new Set<string>()
@@ -170,6 +175,7 @@ export function RuleManager() {
         isSearchExpanded={isSearchExpanded}
         onToggleSearch={() => setIsSearchExpanded(!isSearchExpanded)}
         onCreateNew={() => setIsCreateModalOpen(true)}
+        onOpenLabelManager={() => setIsLabelManagerOpen(true)}
       />
 
       <Box sx={{ flex: 1, overflow: 'hidden' }}>
@@ -233,6 +239,35 @@ export function RuleManager() {
         onCancel={() => !saving && setDeletingFilterId(null)}
         loading={saving}
       />
+
+      <Modal
+        isOpen={isLabelManagerOpen}
+        onClose={() => !labelSaving && setIsLabelManagerOpen(false)}
+        title="ラベル管理"
+      >
+        <LabelManager
+          labels={labels}
+          saving={labelSaving}
+          onCreateLabel={async (name) => {
+            const success = await createLabel(name)
+            return success
+          }}
+          onRenameLabel={async (labelId, newName) => {
+            const success = await renameLabelFn(labelId, newName)
+            if (success) refetchDeleteRules()
+            return success
+          }}
+          onDeleteLabel={async (labelId) => {
+            const success = await deleteLabelFn(labelId)
+            if (success) {
+              refetchFilters()
+              refetchDeleteRules()
+            }
+            return success
+          }}
+          onUpdateLabelColor={updateLabelColor}
+        />
+      </Modal>
 
       <Snackbar
         open={!!snackbarMessage}
