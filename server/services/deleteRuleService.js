@@ -20,11 +20,10 @@ function getDeleteRulesFromStorage() {
 }
 
 /**
- * 削除ルールをスプレッドシートに保存
+ * 削除ルールをシートに書き込む（共通処理）
  * @param {Array} rules - 削除ルール一覧
- * @returns {Object} 保存結果
  */
-function saveDeleteRulesToStorage(rules) {
+function writeDeleteRulesToSheet(rules) {
   const sheet = getSheet(DELETE_RULES_SHEET)
   const lastRow = sheet.getLastRow()
 
@@ -36,7 +35,15 @@ function saveDeleteRulesToStorage(rules) {
     const data = deleteRulesToRows(rules)
     sheet.getRange(2, 1, data.length, 4).setValues(data)
   }
+}
 
+/**
+ * 削除ルールをスプレッドシートに保存
+ * @param {Array} rules - 削除ルール一覧
+ * @returns {Object} 保存結果
+ */
+function saveDeleteRulesToStorage(rules) {
+  writeDeleteRulesToSheet(rules)
   addHistory('SAVE_DELETE_RULES', 'DeleteRules', `Saved ${rules.length} rules`)
   return { success: true }
 }
@@ -81,22 +88,10 @@ function executeDeleteByLabel(labelId, days) {
  */
 function updateDeleteRuleLabelName(labelId, newLabelName) {
   const rules = getDeleteRulesFromStorage()
+  if (!rules.some((r) => r.labelId === labelId)) return
+
   const updated = rules.map((r) => (r.labelId === labelId ? { ...r, labelName: newLabelName } : r))
-
-  // 変更がある場合のみ保存
-  if (rules.some((r) => r.labelId === labelId)) {
-    const sheet = getSheet(DELETE_RULES_SHEET)
-    const lastRow = sheet.getLastRow()
-
-    if (lastRow > 1) {
-      sheet.getRange(2, 1, lastRow - 1, 4).clearContent()
-    }
-
-    if (updated.length > 0) {
-      const data = deleteRulesToRows(updated)
-      sheet.getRange(2, 1, data.length, 4).setValues(data)
-    }
-  }
+  writeDeleteRulesToSheet(updated)
 }
 
 /**
@@ -108,18 +103,7 @@ function removeDeleteRulesByLabelId(labelId) {
   const filtered = rules.filter((r) => r.labelId !== labelId)
 
   if (filtered.length !== rules.length) {
-    const sheet = getSheet(DELETE_RULES_SHEET)
-    const lastRow = sheet.getLastRow()
-
-    if (lastRow > 1) {
-      sheet.getRange(2, 1, lastRow - 1, 4).clearContent()
-    }
-
-    if (filtered.length > 0) {
-      const data = deleteRulesToRows(filtered)
-      sheet.getRange(2, 1, data.length, 4).setValues(data)
-    }
-
+    writeDeleteRulesToSheet(filtered)
     addHistory('REMOVE_DELETE_RULES', labelId, 'Removed delete rules for deleted label')
   }
 }

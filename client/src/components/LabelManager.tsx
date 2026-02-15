@@ -281,30 +281,29 @@ export function LabelManager({
     ? labels.find((l) => l.id === colorEditingLabelId)
     : null
 
-  const deleteMessage = deletingLabel
-    ? (() => {
-        const parts = [`ラベル「${deletingLabel.name}」を削除しますか？`]
-        if (deletionImpact) {
-          if (deletionImpact.childLabelsCount > 0) {
-            parts.push(
-              `${deletionImpact.childLabelsCount}個のサブラベルも削除されます。`,
-            )
-          }
-          if (deletionImpact.filtersCount > 0) {
-            parts.push(
-              `このラベルを使用しているフィルタが${deletionImpact.filtersCount}件あります。`,
-            )
-          }
-          if (deletionImpact.deleteRulesCount > 0) {
-            parts.push(
-              `関連する削除ルールが${deletionImpact.deleteRulesCount}件あり、同時に削除されます。`,
-            )
-          }
-        }
-        parts.push('この操作は取り消せません。')
-        return parts.join('\n')
-      })()
-    : ''
+  function buildDeleteMessage(): string {
+    if (!deletingLabel) return ''
+    const parts = [`ラベル「${deletingLabel.name}」を削除しますか？`]
+    if (deletionImpact) {
+      if (deletionImpact.childLabelsCount > 0) {
+        parts.push(
+          `${deletionImpact.childLabelsCount}個のサブラベルも削除されます。`,
+        )
+      }
+      if (deletionImpact.filtersCount > 0) {
+        parts.push(
+          `このラベルを使用しているフィルタが${deletionImpact.filtersCount}件あります。`,
+        )
+      }
+      if (deletionImpact.deleteRulesCount > 0) {
+        parts.push(
+          `関連する削除ルールが${deletionImpact.deleteRulesCount}件あり、同時に削除されます。`,
+        )
+      }
+    }
+    parts.push('この操作は取り消せません。')
+    return parts.join('\n')
+  }
 
   return (
     <Box>
@@ -490,25 +489,19 @@ export function LabelManager({
               ) : (
                 <ListItemText
                   primary={
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      {label.color ? (
-                        <Chip
-                          label={displayName}
-                          size="small"
-                          sx={{
-                            bgcolor: label.color.backgroundColor,
-                            color: label.color.textColor,
-                            fontWeight: 500,
-                          }}
-                        />
-                      ) : (
-                        <Chip
-                          label={displayName}
-                          size="small"
-                          variant="outlined"
-                        />
-                      )}
-                    </Stack>
+                    <Chip
+                      label={displayName}
+                      size="small"
+                      {...(label.color
+                        ? {
+                            sx: {
+                              bgcolor: label.color.backgroundColor,
+                              color: label.color.textColor,
+                              fontWeight: 500,
+                            },
+                          }
+                        : { variant: 'outlined' as const })}
+                    />
                   }
                 />
               )}
@@ -579,6 +572,11 @@ export function LabelManager({
               const isSelected =
                 currentColorLabel?.color?.backgroundColor === color.bg &&
                 currentColorLabel?.color?.textColor === color.text
+
+              let borderColor = 'transparent'
+              if (isSelected) borderColor = 'primary.main'
+              else if (color.bg === '#ffffff') borderColor = 'grey.300'
+
               return (
                 <Box
                   key={`${color.bg}-${color.text}`}
@@ -593,11 +591,7 @@ export function LabelManager({
                     alignItems: 'center',
                     justifyContent: 'center',
                     border: '2px solid',
-                    borderColor: isSelected
-                      ? 'primary.main'
-                      : color.bg === '#ffffff'
-                        ? 'grey.300'
-                        : 'transparent',
+                    borderColor,
                     '&:hover': {
                       transform: 'scale(1.2)',
                       borderColor: 'primary.main',
@@ -628,7 +622,7 @@ export function LabelManager({
       <ConfirmDialog
         isOpen={!!deletingLabel}
         title="ラベルを削除"
-        message={checkingImpact ? '影響を確認中...' : deleteMessage}
+        message={checkingImpact ? '影響を確認中...' : buildDeleteMessage()}
         onConfirm={handleDeleteConfirm}
         onCancel={() => {
           if (!saving) {

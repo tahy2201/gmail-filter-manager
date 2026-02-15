@@ -4,6 +4,20 @@
  */
 
 /**
+ * Gmail APIのラベルオブジェクトをクライアント向けの形式に変換
+ */
+function toLabelResponse(label) {
+  return {
+    id: label.id,
+    name: label.name,
+    type: label.type === 'system' ? 'system' : 'user',
+    color: label.color
+      ? { backgroundColor: label.color.backgroundColor, textColor: label.color.textColor }
+      : null
+  }
+}
+
+/**
  * Gmail ラベル一覧を取得（カラー情報付き）
  * @returns {Array} ラベル一覧
  */
@@ -11,31 +25,10 @@ function listGmailLabels() {
   const response = Gmail.Users.Labels.list('me')
   const labels = response.labels || []
 
-  return labels
-    .map((label) => {
-      // ユーザーラベルはカラー情報を取得するため個別にgetする
-      let color = null
-      if (label.type !== 'system' && label.color) {
-        color = {
-          backgroundColor: label.color.backgroundColor,
-          textColor: label.color.textColor
-        }
-      }
-
-      return {
-        id: label.id,
-        name: label.name,
-        type: label.type === 'system' ? 'system' : 'user',
-        color: color
-      }
-    })
-    .sort((a, b) => {
-      // ユーザーラベルを先に、その後システムラベル
-      if (a.type !== b.type) {
-        return a.type === 'user' ? -1 : 1
-      }
-      return a.name.localeCompare(b.name)
-    })
+  return labels.map(toLabelResponse).sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'user' ? -1 : 1
+    return a.name.localeCompare(b.name)
+  })
 }
 
 /**
@@ -86,12 +79,7 @@ function createLabelInGmail(labelName) {
 
   addHistory('CREATE_LABEL', labelName, 'Created label ' + created.id)
 
-  return {
-    id: created.id,
-    name: created.name,
-    type: 'user',
-    color: null
-  }
+  return toLabelResponse(created)
 }
 
 /**
@@ -140,14 +128,7 @@ function renameLabelInGmail(labelId, newName) {
       (childLabels.length > 0 ? ' (+ ' + childLabels.length + ' sub-labels)' : '')
   )
 
-  return {
-    id: updated.id,
-    name: updated.name,
-    type: 'user',
-    color: updated.color
-      ? { backgroundColor: updated.color.backgroundColor, textColor: updated.color.textColor }
-      : null
-  }
+  return toLabelResponse(updated)
 }
 
 /**
@@ -227,28 +208,11 @@ function getLabelDeletionImpact(labelId) {
  * @returns {Object} 更新されたラベル
  */
 function updateLabelColorInGmail(labelId, backgroundColor, textColor) {
-  const resource = {}
+  const color = backgroundColor && textColor ? { backgroundColor, textColor } : null
 
-  if (backgroundColor && textColor) {
-    resource.color = {
-      backgroundColor: backgroundColor,
-      textColor: textColor
-    }
-  } else {
-    // 色をリセット（Gmailのデフォルトに戻す）
-    resource.color = null
-  }
-
-  const updated = Gmail.Users.Labels.update(resource, 'me', labelId)
+  const updated = Gmail.Users.Labels.update({ color }, 'me', labelId)
 
   addHistory('UPDATE_LABEL_COLOR', updated.name, 'Updated color for label ' + labelId)
 
-  return {
-    id: updated.id,
-    name: updated.name,
-    type: 'user',
-    color: updated.color
-      ? { backgroundColor: updated.color.backgroundColor, textColor: updated.color.textColor }
-      : null
-  }
+  return toLabelResponse(updated)
 }

@@ -90,11 +90,12 @@ export function useLabels() {
     try {
       // 楽観的更新（親ラベル + サブラベルのカスケード削除）
       const target = labelsRef.current.find((l) => l.id === labelId)
-      const childPrefix = target ? `${target.name}/` : ''
+      const childPrefix = target ? `${target.name}/` : null
       setLabels((prev) =>
         prev.filter(
           (l) =>
-            l.id !== labelId && !(target && l.name.startsWith(childPrefix)),
+            l.id !== labelId &&
+            !(childPrefix && l.name.startsWith(childPrefix)),
         ),
       )
       await gasApi.deleteLabel(labelId)
