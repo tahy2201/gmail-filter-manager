@@ -2,7 +2,7 @@ import {
   Box, Button, Collapse, FormControl, IconButton, InputAdornment, InputLabel,
   MenuItem, Select, Stack, TextField, Typography,
 } from '@mui/material'
-import { Add as AddIcon, Search as SearchIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material'
+import { Add as AddIcon, Label as LabelIcon, Search as SearchIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material'
 import { DeleteSchedule } from '../DeleteSchedule'
 
 interface ToolbarLayoutProps {
@@ -16,11 +16,13 @@ interface ToolbarLayoutProps {
   isSearchExpanded: boolean
   onToggleSearch: () => void
   onCreateNew: () => void
+  onOpenLabelManager: () => void
 }
 
 export function ToolbarLayout({
   isMobile, search, onSearchChange, labelFilter, onLabelFilterChange,
   labelOptions, filterCount, isSearchExpanded, onToggleSearch, onCreateNew,
+  onOpenLabelManager,
 }: ToolbarLayoutProps) {
   const searchField = (
     <TextField
@@ -74,9 +76,22 @@ export function ToolbarLayout({
     </Button>
   )
 
+  const labelManagerButton = (
+    <Button
+      variant="outlined"
+      size="small"
+      startIcon={<LabelIcon />}
+      onClick={onOpenLabelManager}
+      sx={isMobile ? { flex: 1 } : undefined}
+    >
+      ラベル
+    </Button>
+  )
+
   const deleteScheduleBox = (
     <Box
       sx={{
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
         gap: 0.5,
@@ -107,6 +122,7 @@ export function ToolbarLayout({
         </Collapse>
         <Stack direction="row" spacing={1} alignItems="center">
           {newButton}
+          {labelManagerButton}
           {deleteScheduleBox}
           <IconButton
             size="small"
@@ -135,6 +151,7 @@ export function ToolbarLayout({
       </Stack>
       <Stack direction="row" spacing={1} alignItems="center">
         {newButton}
+        {labelManagerButton}
         {deleteScheduleBox}
       </Stack>
     </Stack>

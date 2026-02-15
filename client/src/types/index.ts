@@ -22,10 +22,16 @@ export interface FilterEntry {
   action: FilterAction
 }
 
+export interface LabelColor {
+  backgroundColor: string
+  textColor: string
+}
+
 export interface Label {
   id: string
   name: string
   type: 'system' | 'user'
+  color?: LabelColor | null
 }
 
 export interface EmailPreview {

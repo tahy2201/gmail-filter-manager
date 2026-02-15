@@ -20,11 +20,10 @@ function getDeleteRulesFromStorage() {
 }
 
 /**
- * 削除ルールをスプレッドシートに保存
+ * 削除ルールをシートに書き込む（共通処理）
  * @param {Array} rules - 削除ルール一覧
- * @returns {Object} 保存結果
  */
-function saveDeleteRulesToStorage(rules) {
+function writeDeleteRulesToSheet(rules) {
   const sheet = getSheet(DELETE_RULES_SHEET)
   const lastRow = sheet.getLastRow()
 
@@ -36,7 +35,15 @@ function saveDeleteRulesToStorage(rules) {
     const data = deleteRulesToRows(rules)
     sheet.getRange(2, 1, data.length, 4).setValues(data)
   }
+}
 
+/**
+ * 削除ルールをスプレッドシートに保存
+ * @param {Array} rules - 削除ルール一覧
+ * @returns {Object} 保存結果
+ */
+function saveDeleteRulesToStorage(rules) {
+  writeDeleteRulesToSheet(rules)
   addHistory('SAVE_DELETE_RULES', 'DeleteRules', `Saved ${rules.length} rules`)
   return { success: true }
 }
@@ -72,6 +79,33 @@ function executeDeleteByLabel(labelId, days) {
   console.log(`Deleted ${deleted} threads from label "${labelName}" (${days} days old)`)
   addHistory('DELETE_EMAILS', labelName, `Deleted ${deleted} threads (older than ${days} days)`)
   return { deleted }
+}
+
+/**
+ * リネーム時に削除ルールのlabelNameを同期
+ * @param {string} labelId - ラベルID
+ * @param {string} newLabelName - 新しいラベル名
+ */
+function updateDeleteRuleLabelName(labelId, newLabelName) {
+  const rules = getDeleteRulesFromStorage()
+  if (!rules.some((r) => r.labelId === labelId)) return
+
+  const updated = rules.map((r) => (r.labelId === labelId ? { ...r, labelName: newLabelName } : r))
+  writeDeleteRulesToSheet(updated)
+}
+
+/**
+ * ラベル削除時に関連する削除ルールを除去
+ * @param {string} labelId - ラベルID
+ */
+function removeDeleteRulesByLabelId(labelId) {
+  const rules = getDeleteRulesFromStorage()
+  const filtered = rules.filter((r) => r.labelId !== labelId)
+
+  if (filtered.length !== rules.length) {
+    writeDeleteRulesToSheet(filtered)
+    addHistory('REMOVE_DELETE_RULES', labelId, 'Removed delete rules for deleted label')
+  }
 }
 
 /**
