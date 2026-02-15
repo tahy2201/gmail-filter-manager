@@ -33,10 +33,12 @@ export function useLabels() {
     setError(null)
     try {
       const created = await gasApi.createLabel(name)
-      setLabels((prev) => [...prev, created].sort((a, b) => {
-        if (a.type !== b.type) return a.type === 'user' ? -1 : 1
-        return a.name.localeCompare(b.name)
-      }))
+      setLabels((prev) =>
+        [...prev, created].sort((a, b) => {
+          if (a.type !== b.type) return a.type === 'user' ? -1 : 1
+          return a.name.localeCompare(b.name)
+        }),
+      )
       return true
     } catch (e) {
       setError(getErrorMessage(e, 'Failed to create label'))
@@ -54,12 +56,16 @@ export function useLabels() {
       // 楽観的更新（親ラベル + サブラベルのカスケード）
       const target = labelsRef.current.find((l) => l.id === labelId)
       const oldName = target?.name ?? ''
-      const oldPrefix = oldName + '/'
-      const newPrefix = newName + '/'
+      const oldPrefix = `${oldName}/`
+      const newPrefix = `${newName}/`
       setLabels((prev) =>
         prev.map((l) => {
           if (l.id === labelId) return { ...l, name: newName }
-          if (l.name.startsWith(oldPrefix)) return { ...l, name: newPrefix + l.name.substring(oldPrefix.length) }
+          if (l.name.startsWith(oldPrefix))
+            return {
+              ...l,
+              name: `${newPrefix}${l.name.substring(oldPrefix.length)}`,
+            }
           return l
         }),
       )
@@ -84,8 +90,13 @@ export function useLabels() {
     try {
       // 楽観的更新（親ラベル + サブラベルのカスケード削除）
       const target = labelsRef.current.find((l) => l.id === labelId)
-      const childPrefix = target ? target.name + '/' : ''
-      setLabels((prev) => prev.filter((l) => l.id !== labelId && !(target && l.name.startsWith(childPrefix))))
+      const childPrefix = target ? `${target.name}/` : ''
+      setLabels((prev) =>
+        prev.filter(
+          (l) =>
+            l.id !== labelId && !(target && l.name.startsWith(childPrefix)),
+        ),
+      )
       await gasApi.deleteLabel(labelId)
       return true
     } catch (e) {
@@ -97,29 +108,35 @@ export function useLabels() {
     }
   }, [])
 
-  const updateLabelColor = useCallback(async (labelId: string, backgroundColor: string, textColor: string) => {
-    setSaving(true)
-    setError(null)
-    const snapshot = labelsRef.current
-    try {
-      // 楽観的更新
-      const color = backgroundColor && textColor ? { backgroundColor, textColor } : null
-      setLabels((prev) =>
-        prev.map((l) => (l.id === labelId ? { ...l, color } : l)),
-      )
-      const updated = await gasApi.updateLabelColor(labelId, backgroundColor, textColor)
-      setLabels((prev) =>
-        prev.map((l) => (l.id === labelId ? updated : l)),
-      )
-      return true
-    } catch (e) {
-      setLabels(snapshot)
-      setError(getErrorMessage(e, 'Failed to update label color'))
-      return false
-    } finally {
-      setSaving(false)
-    }
-  }, [])
+  const updateLabelColor = useCallback(
+    async (labelId: string, backgroundColor: string, textColor: string) => {
+      setSaving(true)
+      setError(null)
+      const snapshot = labelsRef.current
+      try {
+        // 楽観的更新
+        const color =
+          backgroundColor && textColor ? { backgroundColor, textColor } : null
+        setLabels((prev) =>
+          prev.map((l) => (l.id === labelId ? { ...l, color } : l)),
+        )
+        const updated = await gasApi.updateLabelColor(
+          labelId,
+          backgroundColor,
+          textColor,
+        )
+        setLabels((prev) => prev.map((l) => (l.id === labelId ? updated : l)))
+        return true
+      } catch (e) {
+        setLabels(snapshot)
+        setError(getErrorMessage(e, 'Failed to update label color'))
+        return false
+      } finally {
+        setSaving(false)
+      }
+    },
+    [],
+  )
 
   return {
     labels,

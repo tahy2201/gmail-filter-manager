@@ -1,4 +1,11 @@
-import { useMemo, useState } from 'react'
+import {
+  Add as AddIcon,
+  Check as CheckIcon,
+  Close as CloseIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Palette as PaletteIcon,
+} from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -19,14 +26,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import {
-  Add as AddIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Palette as PaletteIcon,
-} from '@mui/icons-material'
+import { useMemo, useState } from 'react'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { api as gasApi } from '../services'
 import type { Label } from '../types'
@@ -113,7 +113,10 @@ function getLabelDisplayInfo(name: string) {
 function splitLabelName(fullName: string): { parent: string; leaf: string } {
   const lastSlash = fullName.lastIndexOf('/')
   if (lastSlash === -1) return { parent: '', leaf: fullName }
-  return { parent: fullName.substring(0, lastSlash), leaf: fullName.substring(lastSlash + 1) }
+  return {
+    parent: fullName.substring(0, lastSlash),
+    leaf: fullName.substring(lastSlash + 1),
+  }
 }
 
 /** フルラベル名を親パス + 末尾名から組み立て */
@@ -127,7 +130,11 @@ interface Props {
   onCreateLabel: (name: string) => Promise<boolean>
   onRenameLabel: (labelId: string, newName: string) => Promise<boolean>
   onDeleteLabel: (labelId: string) => Promise<boolean>
-  onUpdateLabelColor: (labelId: string, backgroundColor: string, textColor: string) => Promise<boolean>
+  onUpdateLabelColor: (
+    labelId: string,
+    backgroundColor: string,
+    textColor: string,
+  ) => Promise<boolean>
 }
 
 export function LabelManager({
@@ -157,14 +164,16 @@ export function LabelManager({
   } | null>(null)
   const [checkingImpact, setCheckingImpact] = useState(false)
   const [colorAnchorEl, setColorAnchorEl] = useState<HTMLElement | null>(null)
-  const [colorEditingLabelId, setColorEditingLabelId] = useState<string | null>(null)
+  const [colorEditingLabelId, setColorEditingLabelId] = useState<string | null>(
+    null,
+  )
 
   const userLabels = labels.filter((l) => l.type === 'user')
   const systemLabels = labels.filter((l) => l.type === 'system')
 
   // 親ラベル候補（全ユーザーラベル名）
-  const parentOptions = useMemo(() =>
-    userLabels.map((l) => l.name).sort(),
+  const parentOptions = useMemo(
+    () => userLabels.map((l) => l.name).sort(),
     [userLabels],
   )
 
@@ -174,8 +183,10 @@ export function LabelManager({
     const editingLabel = labels.find((l) => l.id === editingLabelId)
     if (!editingLabel) return parentOptions
     const editingName = editingLabel.name
-    const editingPrefix = editingName + '/'
-    return parentOptions.filter((name) => name !== editingName && !name.startsWith(editingPrefix))
+    const editingPrefix = `${editingName}/`
+    return parentOptions.filter(
+      (name) => name !== editingName && !name.startsWith(editingPrefix),
+    )
   }, [parentOptions, editingLabelId, labels])
 
   async function handleCreate() {
@@ -222,7 +233,11 @@ export function LabelManager({
       const impact = await gasApi.checkLabelDeletionImpact(label.id)
       setDeletionImpact(impact)
     } catch {
-      setDeletionImpact({ filtersCount: 0, deleteRulesCount: 0, childLabelsCount: 0 })
+      setDeletionImpact({
+        filtersCount: 0,
+        deleteRulesCount: 0,
+        childLabelsCount: 0,
+      })
     } finally {
       setCheckingImpact(false)
     }
@@ -237,7 +252,10 @@ export function LabelManager({
     }
   }
 
-  function handleColorClick(event: React.MouseEvent<HTMLElement>, labelId: string) {
+  function handleColorClick(
+    event: React.MouseEvent<HTMLElement>,
+    labelId: string,
+  ) {
     setColorAnchorEl(event.currentTarget)
     setColorEditingLabelId(labelId)
   }
@@ -268,13 +286,19 @@ export function LabelManager({
         const parts = [`ラベル「${deletingLabel.name}」を削除しますか？`]
         if (deletionImpact) {
           if (deletionImpact.childLabelsCount > 0) {
-            parts.push(`${deletionImpact.childLabelsCount}個のサブラベルも削除されます。`)
+            parts.push(
+              `${deletionImpact.childLabelsCount}個のサブラベルも削除されます。`,
+            )
           }
           if (deletionImpact.filtersCount > 0) {
-            parts.push(`このラベルを使用しているフィルタが${deletionImpact.filtersCount}件あります。`)
+            parts.push(
+              `このラベルを使用しているフィルタが${deletionImpact.filtersCount}件あります。`,
+            )
           }
           if (deletionImpact.deleteRulesCount > 0) {
-            parts.push(`関連する削除ルールが${deletionImpact.deleteRulesCount}件あり、同時に削除されます。`)
+            parts.push(
+              `関連する削除ルールが${deletionImpact.deleteRulesCount}件あり、同時に削除されます。`,
+            )
           }
         }
         parts.push('この操作は取り消せません。')
@@ -316,7 +340,9 @@ export function LabelManager({
             >
               <MenuItem value="">（なし）</MenuItem>
               {parentOptions.map((name) => (
-                <MenuItem key={name} value={name}>{name}</MenuItem>
+                <MenuItem key={name} value={name}>
+                  {name}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -334,7 +360,13 @@ export function LabelManager({
           <Button
             variant="contained"
             size="small"
-            startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <AddIcon />}
+            startIcon={
+              saving ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <AddIcon />
+              )
+            }
             onClick={handleCreate}
             disabled={!newLeafName.trim() || saving}
             sx={{ whiteSpace: 'nowrap' }}
@@ -345,10 +377,14 @@ export function LabelManager({
       </Box>
 
       {/* ユーザーラベル一覧（階層表示） */}
-      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5, mt: 2 }}>
+      <Typography
+        variant="subtitle2"
+        color="text.secondary"
+        sx={{ mb: 0.5, mt: 2 }}
+      >
         ユーザーラベル ({userLabels.length})
       </Typography>
-        <List dense disablePadding>
+      <List dense disablePadding>
         {userLabels.map((label) => {
           const { level, displayName } = getLabelDisplayInfo(label.name)
           return (
@@ -365,27 +401,44 @@ export function LabelManager({
               secondaryAction={
                 editingLabelId === label.id ? (
                   <Stack direction="row" spacing={0.5}>
-                    <IconButton size="small" onClick={handleRename} disabled={saving || !editLeaf.trim()}>
+                    <IconButton
+                      size="small"
+                      onClick={handleRename}
+                      disabled={saving || !editLeaf.trim()}
+                    >
                       <CheckIcon fontSize="small" color="success" />
                     </IconButton>
-                    <IconButton size="small" onClick={cancelEditing} disabled={saving}>
+                    <IconButton
+                      size="small"
+                      onClick={cancelEditing}
+                      disabled={saving}
+                    >
                       <CloseIcon fontSize="small" />
                     </IconButton>
                   </Stack>
                 ) : (
                   <Stack direction="row" spacing={0.5}>
                     <Tooltip title="色を変更">
-                      <IconButton size="small" onClick={(e) => handleColorClick(e, label.id)}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleColorClick(e, label.id)}
+                      >
                         <PaletteIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="リネーム">
-                      <IconButton size="small" onClick={() => startEditing(label)}>
+                      <IconButton
+                        size="small"
+                        onClick={() => startEditing(label)}
+                      >
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="削除">
-                      <IconButton size="small" onClick={() => handleDeleteClick(label)}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDeleteClick(label)}
+                      >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -400,7 +453,10 @@ export function LabelManager({
                   alignItems={isMobile ? 'stretch' : 'center'}
                   sx={{ flex: 1, mr: 1 }}
                 >
-                  <FormControl size="small" sx={isMobile ? {} : { minWidth: 140 }}>
+                  <FormControl
+                    size="small"
+                    sx={isMobile ? {} : { minWidth: 140 }}
+                  >
                     <InputLabel id="edit-parent-label">親ラベル</InputLabel>
                     <Select
                       labelId="edit-parent-label"
@@ -411,7 +467,9 @@ export function LabelManager({
                     >
                       <MenuItem value="">（なし）</MenuItem>
                       {editParentOptions.map((name) => (
-                        <MenuItem key={name} value={name}>{name}</MenuItem>
+                        <MenuItem key={name} value={name}>
+                          {name}
+                        </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
@@ -444,7 +502,11 @@ export function LabelManager({
                           }}
                         />
                       ) : (
-                        <Chip label={displayName} size="small" variant="outlined" />
+                        <Chip
+                          label={displayName}
+                          size="small"
+                          variant="outlined"
+                        />
                       )}
                     </Stack>
                   }
@@ -454,7 +516,11 @@ export function LabelManager({
           )
         })}
         {userLabels.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ py: 2, textAlign: 'center' }}
+          >
             ユーザーラベルはありません
           </Typography>
         )}
@@ -464,7 +530,11 @@ export function LabelManager({
       {systemLabels.length > 0 && (
         <>
           <Divider sx={{ my: 2 }} />
-          <Typography variant="subtitle2" color="text.disabled" sx={{ mb: 0.5 }}>
+          <Typography
+            variant="subtitle2"
+            color="text.disabled"
+            sx={{ mb: 0.5 }}
+          >
             システムラベル ({systemLabels.length})
           </Typography>
           <List dense disablePadding>
@@ -472,7 +542,12 @@ export function LabelManager({
               <ListItem key={label.id} disableGutters sx={{ py: 0.25, px: 1 }}>
                 <ListItemText
                   primary={
-                    <Chip label={label.name} size="small" variant="outlined" disabled />
+                    <Chip
+                      label={label.name}
+                      size="small"
+                      variant="outlined"
+                      disabled
+                    />
                   }
                 />
               </ListItem>
@@ -518,7 +593,11 @@ export function LabelManager({
                     alignItems: 'center',
                     justifyContent: 'center',
                     border: '2px solid',
-                    borderColor: isSelected ? 'primary.main' : (color.bg === '#ffffff' ? 'grey.300' : 'transparent'),
+                    borderColor: isSelected
+                      ? 'primary.main'
+                      : color.bg === '#ffffff'
+                        ? 'grey.300'
+                        : 'transparent',
                     '&:hover': {
                       transform: 'scale(1.2)',
                       borderColor: 'primary.main',

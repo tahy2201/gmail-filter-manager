@@ -6,7 +6,12 @@ import type {
   Label,
   TriggerStatus,
 } from '@/types'
-import { mockDeleteRules, mockEmails, mockFilters, mockLabels } from './mockData'
+import {
+  mockDeleteRules,
+  mockEmails,
+  mockFilters,
+  mockLabels,
+} from './mockData'
 
 /**
  * モックAPI（開発環境用）
@@ -77,7 +82,9 @@ export const mockGasApi = {
     return delay(getStoredFilters())
   },
 
-  createFilter: async (filter: Omit<FilterEntry, 'id'>): Promise<FilterEntry> => {
+  createFilter: async (
+    filter: Omit<FilterEntry, 'id'>,
+  ): Promise<FilterEntry> => {
     console.log('[Mock API] createFilter', filter)
     const newFilter: FilterEntry = {
       ...filter,
@@ -88,14 +95,19 @@ export const mockGasApi = {
     return delay(newFilter)
   },
 
-  updateFilter: async (filterId: string, filter: Omit<FilterEntry, 'id'>): Promise<FilterEntry> => {
+  updateFilter: async (
+    filterId: string,
+    filter: Omit<FilterEntry, 'id'>,
+  ): Promise<FilterEntry> => {
     console.log('[Mock API] updateFilter', filterId, filter)
     const newFilter: FilterEntry = {
       ...filter,
       id: `mock_filter_${Date.now()}`,
     }
     const filters = getStoredFilters()
-    saveFiltersToStorage(filters.map((f) => (f.id === filterId ? newFilter : f)))
+    saveFiltersToStorage(
+      filters.map((f) => (f.id === filterId ? newFilter : f)),
+    )
     return delay(newFilter)
   },
 
@@ -110,7 +122,8 @@ export const mockGasApi = {
     console.log('[Mock API] searchEmails', query, max)
     // クエリでフィルタリング（簡易実装）
     const filtered = mockEmails.filter((email) => {
-      const searchText = `${email.subject} ${email.from} ${email.snippet}`.toLowerCase()
+      const searchText =
+        `${email.subject} ${email.from} ${email.snippet}`.toLowerCase()
       return searchText.includes(query.toLowerCase())
     })
     return delay(filtered.slice(0, max))
@@ -126,13 +139,18 @@ export const mockGasApi = {
     return delay(getStoredDeleteRules())
   },
 
-  saveDeleteRules: async (rules: DeleteRule[]): Promise<{ success: boolean }> => {
+  saveDeleteRules: async (
+    rules: DeleteRule[],
+  ): Promise<{ success: boolean }> => {
     console.log('[Mock API] saveDeleteRules', rules)
     saveDeleteRulesToStorage(rules)
     return delay({ success: true })
   },
 
-  executeDeleteRule: async (labelId: string, days: number): Promise<{ deleted: number }> => {
+  executeDeleteRule: async (
+    labelId: string,
+    days: number,
+  ): Promise<{ deleted: number }> => {
     console.log('[Mock API] executeDeleteRule', labelId, days)
     // ランダムな削除数を返す
     const deleted = Math.floor(Math.random() * 50) + 1
@@ -151,13 +169,19 @@ export const mockGasApi = {
 
   getDataSpreadsheetUrl: async (): Promise<{ url: string }> => {
     console.log('[Mock API] getDataSpreadsheetUrl')
-    return delay({ url: 'https://docs.google.com/spreadsheets/d/mock-spreadsheet-id' })
+    return delay({
+      url: 'https://docs.google.com/spreadsheets/d/mock-spreadsheet-id',
+    })
   },
 
-  setup: async (): Promise<{ spreadsheetUrl: string; spreadsheetId: string }> => {
+  setup: async (): Promise<{
+    spreadsheetUrl: string
+    spreadsheetId: string
+  }> => {
     console.log('[Mock API] setup')
     return delay({
-      spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/mock-spreadsheet-id',
+      spreadsheetUrl:
+        'https://docs.google.com/spreadsheets/d/mock-spreadsheet-id',
       spreadsheetId: 'mock-spreadsheet-id',
     })
   },
@@ -182,7 +206,7 @@ export const mockGasApi = {
         total: count,
         message: `${count}件のメールにラベルを適用しました`,
       },
-      1500
+      1500,
     )
   },
 
@@ -191,7 +215,9 @@ export const mockGasApi = {
     return delay(getStoredTrigger())
   },
 
-  setupDeleteTrigger: async (hour: number): Promise<{ success: boolean; hour: number }> => {
+  setupDeleteTrigger: async (
+    hour: number,
+  ): Promise<{ success: boolean; hour: number }> => {
     console.log('[Mock API] setupDeleteTrigger', hour)
     saveTriggerToStorage({ enabled: true, hour })
     return delay({ success: true, hour })
@@ -222,16 +248,20 @@ export const mockGasApi = {
     return delay(history.slice(0, limit))
   },
 
-  updateSpreadsheetReference: async (spreadsheetId: string): Promise<{ url: string }> => {
+  updateSpreadsheetReference: async (
+    spreadsheetId: string,
+  ): Promise<{ url: string }> => {
     console.log('[Mock API] updateSpreadsheetReference', spreadsheetId)
-    return delay({ url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}` })
+    return delay({
+      url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
+    })
   },
 
   createLabel: async (labelName: string): Promise<Label> => {
     console.log('[Mock API] createLabel', labelName)
     const labels = getStoredLabels()
     if (labels.some((l) => l.name === labelName)) {
-      throw new Error('同名のラベルが既に存在します: ' + labelName)
+      throw new Error(`同名のラベルが既に存在します: ${labelName}`)
     }
     const newLabel: Label = {
       id: `label_${Date.now()}`,
@@ -247,29 +277,37 @@ export const mockGasApi = {
     console.log('[Mock API] renameLabel', labelId, newName)
     const labels = getStoredLabels()
     if (labels.some((l) => l.name === newName && l.id !== labelId)) {
-      throw new Error('同名のラベルが既に存在します: ' + newName)
+      throw new Error(`同名のラベルが既に存在します: ${newName}`)
     }
     const target = labels.find((l) => l.id === labelId)
     if (!target) throw new Error('ラベルが見つかりません')
     const oldName = target.name
-    const oldPrefix = oldName + '/'
-    const newPrefix = newName + '/'
+    const oldPrefix = `${oldName}/`
+    const newPrefix = `${newName}/`
     // 親ラベル + サブラベルのカスケードリネーム
     const updated = labels.map((l) => {
       if (l.id === labelId) return { ...l, name: newName }
-      if (l.name.startsWith(oldPrefix)) return { ...l, name: newPrefix + l.name.substring(oldPrefix.length) }
+      if (l.name.startsWith(oldPrefix))
+        return {
+          ...l,
+          name: `${newPrefix}${l.name.substring(oldPrefix.length)}`,
+        }
       return l
     })
     saveLabelsToStorage(updated)
-    const label = updated.find((l) => l.id === labelId)!
+    const label = updated.find((l) => l.id === labelId)
+    if (!label) throw new Error('ラベルが見つかりません')
     // 削除ルールのlabelNameも同期（親+子）
     const rules = getStoredDeleteRules()
     saveDeleteRulesToStorage(
       rules.map((r) => {
         if (r.labelId === labelId) return { ...r, labelName: newName }
         const matchLabel = labels.find((l) => l.id === r.labelId)
-        if (matchLabel && matchLabel.name.startsWith(oldPrefix)) {
-          return { ...r, labelName: newPrefix + matchLabel.name.substring(oldPrefix.length) }
+        if (matchLabel?.name.startsWith(oldPrefix)) {
+          return {
+            ...r,
+            labelName: `${newPrefix}${matchLabel.name.substring(oldPrefix.length)}`,
+          }
         }
         return r
       }),
@@ -282,8 +320,11 @@ export const mockGasApi = {
     const labels = getStoredLabels()
     const target = labels.find((l) => l.id === labelId)
     if (!target) throw new Error('ラベルが見つかりません')
-    const childPrefix = target.name + '/'
-    const idsToRemove = new Set([labelId, ...labels.filter((l) => l.name.startsWith(childPrefix)).map((l) => l.id)])
+    const childPrefix = `${target.name}/`
+    const idsToRemove = new Set([
+      labelId,
+      ...labels.filter((l) => l.name.startsWith(childPrefix)).map((l) => l.id),
+    ])
     saveLabelsToStorage(labels.filter((l) => !idsToRemove.has(l.id)))
     // 関連削除ルールも除去（親+子）
     const rules = getStoredDeleteRules()
@@ -291,28 +332,54 @@ export const mockGasApi = {
     return delay({ success: true })
   },
 
-  checkLabelDeletionImpact: async (labelId: string): Promise<{ filtersCount: number; deleteRulesCount: number; childLabelsCount: number }> => {
+  checkLabelDeletionImpact: async (
+    labelId: string,
+  ): Promise<{
+    filtersCount: number
+    deleteRulesCount: number
+    childLabelsCount: number
+  }> => {
     console.log('[Mock API] checkLabelDeletionImpact', labelId)
     const labels = getStoredLabels()
     const target = labels.find((l) => l.id === labelId)
-    const childPrefix = target ? target.name + '/' : ''
-    const childLabels = target ? labels.filter((l) => l.name.startsWith(childPrefix)) : []
+    const childPrefix = target ? `${target.name}/` : ''
+    const childLabels = target
+      ? labels.filter((l) => l.name.startsWith(childPrefix))
+      : []
     const targetIds = new Set([labelId, ...childLabels.map((l) => l.id)])
     const filters = getStoredFilters()
-    const filtersCount = filters.filter((f) => f.action.labelId && targetIds.has(f.action.labelId)).length
+    const filtersCount = filters.filter(
+      (f) => f.action.labelId && targetIds.has(f.action.labelId),
+    ).length
     const rules = getStoredDeleteRules()
-    const deleteRulesCount = rules.filter((r) => targetIds.has(r.labelId)).length
-    return delay({ filtersCount, deleteRulesCount, childLabelsCount: childLabels.length })
+    const deleteRulesCount = rules.filter((r) =>
+      targetIds.has(r.labelId),
+    ).length
+    return delay({
+      filtersCount,
+      deleteRulesCount,
+      childLabelsCount: childLabels.length,
+    })
   },
 
-  updateLabelColor: async (labelId: string, backgroundColor: string, textColor: string): Promise<Label> => {
-    console.log('[Mock API] updateLabelColor', labelId, backgroundColor, textColor)
-    const labels = getStoredLabels()
-    const color = backgroundColor && textColor ? { backgroundColor, textColor } : null
-    const updated = labels.map((l) =>
-      l.id === labelId ? { ...l, color } : l,
+  updateLabelColor: async (
+    labelId: string,
+    backgroundColor: string,
+    textColor: string,
+  ): Promise<Label> => {
+    console.log(
+      '[Mock API] updateLabelColor',
+      labelId,
+      backgroundColor,
+      textColor,
     )
+    const labels = getStoredLabels()
+    const color =
+      backgroundColor && textColor ? { backgroundColor, textColor } : null
+    const updated = labels.map((l) => (l.id === labelId ? { ...l, color } : l))
     saveLabelsToStorage(updated)
-    return delay(updated.find((l) => l.id === labelId)!)
+    const label = updated.find((l) => l.id === labelId)
+    if (!label) throw new Error('ラベルが見つかりません')
+    return delay(label)
   },
 }
