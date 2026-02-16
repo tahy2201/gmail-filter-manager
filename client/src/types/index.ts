@@ -34,15 +34,6 @@ export interface Label {
   color?: LabelColor | null
 }
 
-export interface EmailPreview {
-  id: string
-  threadId: string
-  subject: string
-  from: string
-  date: string
-  snippet: string
-}
-
 export interface DeleteRule {
   labelId: string
   labelName: string

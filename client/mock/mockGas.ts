@@ -1,6 +1,5 @@
 import type {
   DeleteRule,
-  EmailPreview,
   FilterEntry,
   HistoryEntry,
   Label,
@@ -8,7 +7,6 @@ import type {
 } from '@/types'
 import {
   mockDeleteRules,
-  mockEmails,
   mockFilters,
   mockLabels,
 } from './mockData'
@@ -118,17 +116,6 @@ export const mockGasApi = {
     return delay({ success: true })
   },
 
-  searchEmails: async (query: string, max = 50): Promise<EmailPreview[]> => {
-    console.log('[Mock API] searchEmails', query, max)
-    // クエリでフィルタリング（簡易実装）
-    const filtered = mockEmails.filter((email) => {
-      const searchText =
-        `${email.subject} ${email.from} ${email.snippet}`.toLowerCase()
-      return searchText.includes(query.toLowerCase())
-    })
-    return delay(filtered.slice(0, max))
-  },
-
   getLabels: async (): Promise<Label[]> => {
     console.log('[Mock API] getLabels')
     return delay(getStoredLabels())
@@ -160,11 +147,6 @@ export const mockGasApi = {
   getCurrentUser: async (): Promise<{ email: string }> => {
     console.log('[Mock API] getCurrentUser')
     return delay({ email: 'mock-user@example.com' })
-  },
-
-  getUnfilteredEmails: async (max = 50): Promise<EmailPreview[]> => {
-    console.log('[Mock API] getUnfilteredEmails', max)
-    return delay(mockEmails.slice(0, max))
   },
 
   getDataSpreadsheetUrl: async (): Promise<{ url: string }> => {

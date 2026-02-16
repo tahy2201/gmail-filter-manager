@@ -26,14 +26,12 @@ gmail-filter-manager/
 │   ├── webapp.js            # Webエントリーポイント (doGet のみ)
 │   ├── controllers/         # API層 (google.script.run から呼ばれる公開関数)
 │   │   ├── filterController.js       # フィルタ管理API (5関数: getFilters, createFilter, updateFilter, deleteFilter, applyToExistingMessages)
-│   │   ├── emailController.js        # メール検索API (2関数)
 │   │   ├── deleteRuleController.js   # 削除ルール管理API (5関数)
 │   │   ├── triggerController.js      # トリガー管理API (3関数)
 │   │   ├── labelController.js        # ラベル管理API (1関数)
 │   │   └── systemController.js       # システム設定API (3関数)
 │   ├── services/            # ビジネスロジック層（API呼び出し・副作用あり）
 │   │   ├── filterService.js          # Gmail API直接CRUD (getFiltersFromGmail, createFilterInGmail, updateFilterInGmail, deleteFilterFromGmail, applyFilterToExistingMessages)
-│   │   ├── emailService.js           # メール検索 (2関数)
 │   │   ├── deleteRuleService.js      # 削除ルール管理 (4関数)
 │   │   ├── triggerService.js         # トリガー管理 (3関数)
 │   │   ├── labelService.js           # ラベル取得/作成 (2関数)
@@ -66,14 +64,12 @@ gmail-filter-manager/
 
 ## 実装済み機能
 - ✅ フィルタ一覧表示（Gmail APIから直接取得、ラベル別グルーピング、検索・フィルタリング）
-- ✅ フィルタのクエリプレビュー（マッチするメール表示）
-- ✅ フィルタ外メール検索
-- ✅ 削除ルール管理（追加/削除/有効無効/即時実行）
 - ✅ フィルタ編集UI（WebUIからフィルタを追加・編集・削除 → Gmail APIに直接反映）
+- ✅ フィルタ条件のGmail URLテスト（フィルタ編集画面からGmail検索URLを開いてテスト）
 - ✅ 既存メールへのフィルタ適用（条件に一致する既存メールにラベル付与）
-
-## 未実装機能
-- ❌ 日次トリガー設定UI（`setupDailyDeleteTrigger()` 関数はあるがUI未連携）
+- ✅ 削除ルール管理（追加/削除/有効無効/即時実行）
+- ✅ 日次トリガー設定UI（スケジュールON/OFF・時刻設定）
+- ✅ ラベル管理（作成・リネーム・削除・カラー設定）
 
 ## 開発コマンド
 ```bash

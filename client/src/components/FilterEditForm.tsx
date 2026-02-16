@@ -17,7 +17,9 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
+import { ContentCopy as ContentCopyIcon, OpenInNew as OpenInNewIcon } from '@mui/icons-material'
 import type { FilterEntry, Label } from '../types'
+import { buildGmailSearchUrl, buildSearchQuery } from '../utils/gmailUrl'
 
 interface Props {
   filter?: FilterEntry
@@ -163,6 +165,36 @@ export function FilterEditForm({
               fullWidth
             />
           </Stack>
+
+          {isMobile ? (
+            <Button
+              variant="text"
+              size="small"
+              startIcon={<ContentCopyIcon />}
+              disabled={!from && !to && !subject && !hasTheWord && !doesNotHaveTheWord}
+              onClick={() => {
+                const query = buildSearchQuery({ from, to, subject, hasTheWord, doesNotHaveTheWord })
+                navigator.clipboard.writeText(query)
+              }}
+              sx={{ mt: 1, alignSelf: 'flex-start' }}
+            >
+              検索クエリをコピー
+            </Button>
+          ) : (
+            <Button
+              variant="text"
+              size="small"
+              startIcon={<OpenInNewIcon />}
+              disabled={!from && !to && !subject && !hasTheWord && !doesNotHaveTheWord}
+              onClick={() => {
+                const url = buildGmailSearchUrl({ from, to, subject, hasTheWord, doesNotHaveTheWord })
+                window.open(url, '_blank')
+              }}
+              sx={{ mt: 1, alignSelf: 'flex-start' }}
+            >
+              Gmailでテスト
+            </Button>
+          )}
         </Box>
 
         <Divider />
