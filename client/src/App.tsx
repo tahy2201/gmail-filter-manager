@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { Box, Container, CssBaseline, Tab, Tabs, ThemeProvider, Typography, createTheme } from '@mui/material'
 import { HistoryPanel } from './components/HistoryPanel'
-import { QueryTester } from './components/QueryTester'
 import { RuleManager } from './components/RuleManager'
 import { SettingsPanel } from './components/SettingsPanel'
-import { UnlabeledEmails } from './components/UnlabeledEmails'
 
 const theme = createTheme({
   palette: {
@@ -42,10 +40,8 @@ function App() {
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} aria-label="フィルタ管理タブ">
             <Tab label="ルール管理" id="tab-0" aria-controls="tabpanel-0" />
-            <Tab label="クエリテスト" id="tab-1" aria-controls="tabpanel-1" />
-            <Tab label="ラベルなし" id="tab-2" aria-controls="tabpanel-2" />
-            <Tab label="履歴" id="tab-3" aria-controls="tabpanel-3" />
-            <Tab label="設定" id="tab-4" aria-controls="tabpanel-4" />
+            <Tab label="履歴" id="tab-1" aria-controls="tabpanel-1" />
+            <Tab label="設定" id="tab-2" aria-controls="tabpanel-2" />
           </Tabs>
         </Box>
 
@@ -53,15 +49,9 @@ function App() {
           <RuleManager />
         </TabPanel>
         <TabPanel value={tabValue} index={1}>
-          <QueryTester />
-        </TabPanel>
-        <TabPanel value={tabValue} index={2}>
-          <UnlabeledEmails />
-        </TabPanel>
-        <TabPanel value={tabValue} index={3}>
           <HistoryPanel />
         </TabPanel>
-        <TabPanel value={tabValue} index={4}>
+        <TabPanel value={tabValue} index={2}>
           <SettingsPanel />
         </TabPanel>
       </Container>

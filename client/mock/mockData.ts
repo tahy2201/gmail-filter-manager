@@ -1,4 +1,4 @@
-import type { DeleteRule, EmailPreview, FilterEntry, Label } from '@/types'
+import type { DeleteRule, FilterEntry, Label } from '@/types'
 
 export const mockFilters: FilterEntry[] = [
   {
@@ -132,29 +132,3 @@ export const mockDeleteRules: DeleteRule[] = [
   { labelId: 'label_7', labelName: 'Social', delayDays: 14, enabled: false },
 ]
 
-export const mockEmails: EmailPreview[] = [
-  {
-    id: 'email_1',
-    threadId: 'thread_1',
-    subject: '[GitHub] Pull Request #123: Feature implementation',
-    from: 'notifications@github.com',
-    date: '2026-02-07T10:30:00Z',
-    snippet: 'A new pull request has been opened...',
-  },
-  {
-    id: 'email_2',
-    threadId: 'thread_2',
-    subject: 'Slack notification',
-    from: 'notifications@slack.com',
-    date: '2026-02-07T09:15:00Z',
-    snippet: 'You have a new message from...',
-  },
-  {
-    id: 'email_3',
-    threadId: 'thread_3',
-    subject: 'Weekly Newsletter #42',
-    from: 'newsletter@example.com',
-    date: '2026-02-06T08:00:00Z',
-    snippet: 'Here are this week\'s top stories...',
-  },
-]

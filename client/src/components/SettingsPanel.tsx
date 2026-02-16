@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import { OpenInNew as OpenInNewIcon } from '@mui/icons-material'
 import { useSpreadsheet } from '../hooks/useSpreadsheet'
+import { DeleteSchedule } from './DeleteSchedule'
 
 export function SettingsPanel() {
   const { url, loading, saving, error, successMessage, updateSpreadsheetId, clearMessages } =
@@ -44,6 +45,13 @@ export function SettingsPanel() {
 
   return (
     <Stack spacing={3}>
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          削除スケジュール
+        </Typography>
+        <DeleteSchedule />
+      </Paper>
+
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
           スプレッドシート設定

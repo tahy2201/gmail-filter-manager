@@ -1,6 +1,5 @@
 import type {
   DeleteRule,
-  EmailPreview,
   FilterEntry,
   HistoryEntry,
   Label,
@@ -23,13 +22,11 @@ interface GasRunner {
   createFilter: (filterEntry: Omit<FilterEntry, 'id'>) => void
   updateFilter: (filterId: string, filterEntry: Omit<FilterEntry, 'id'>) => void
   deleteFilter: (filterId: string) => void
-  searchEmails: (query: string, max: number) => void
   getLabels: () => void
   getDeleteRules: () => void
   saveDeleteRules: (rules: DeleteRule[]) => void
   executeDeleteRule: (labelId: string, days: number) => void
   getCurrentUser: () => void
-  getUnfilteredEmails: (max: number) => void
   getDataSpreadsheetUrl: () => void
   setup: () => void
   getTriggerStatus: () => void
@@ -71,9 +68,6 @@ export const gasApi = {
   deleteFilter: (filterId: string): Promise<{ success: boolean }> =>
     runGasFunction('deleteFilter', filterId),
 
-  searchEmails: (query: string, max = 50): Promise<EmailPreview[]> =>
-    runGasFunction('searchEmails', query, max),
-
   getLabels: (): Promise<Label[]> => runGasFunction('getLabels'),
 
   getDeleteRules: (): Promise<DeleteRule[]> => runGasFunction('getDeleteRules'),
@@ -85,9 +79,6 @@ export const gasApi = {
     runGasFunction('executeDeleteRule', labelId, days),
 
   getCurrentUser: (): Promise<{ email: string }> => runGasFunction('getCurrentUser'),
-
-  getUnfilteredEmails: (max = 50): Promise<EmailPreview[]> =>
-    runGasFunction('getUnfilteredEmails', max),
 
   getDataSpreadsheetUrl: (): Promise<{ url: string }> =>
     runGasFunction('getDataSpreadsheetUrl'),
