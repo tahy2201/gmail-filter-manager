@@ -11,9 +11,14 @@ const URL_PARAM_MAP: Record<keyof FilterCriteria, string> = {
 export function buildGmailSearchUrl(criteria: FilterCriteria): string {
   const params = Object.entries(URL_PARAM_MAP)
     .filter(([key]) => criteria[key as keyof FilterCriteria])
-    .map(([key, param]) => `${param}=${encodeURIComponent(criteria[key as keyof FilterCriteria]!)}`)
+    .map(([key, param]) => {
+      const value = criteria[key as keyof FilterCriteria]
+      return value ? `${param}=${encodeURIComponent(value)}` : ''
+    })
+    .filter(Boolean)
     .join('&')
 
+  if (!params) return 'https://mail.google.com/mail/u/0/#inbox'
   return `https://mail.google.com/mail/u/0/#advanced-search/${params}`
 }
 
