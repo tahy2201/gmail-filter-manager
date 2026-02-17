@@ -27,3 +27,6 @@ old-prj-delmail/
 
 # Personal data
 mailFilters.xml
+
+# claude
+.claude
